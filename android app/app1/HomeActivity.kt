@@ -1,0 +1,64 @@
+package com.example.app1
+
+import android.net.Uri
+import android.os.Bundle
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
+import com.example.app1.databinding.ActivityMainPageBinding
+
+class HomeActivity : AppCompatActivity(){
+
+    private lateinit var binding: ActivityMainPageBinding
+
+    private val images = mutableListOf<Uri>()
+
+    private val pickImageLauncher =
+        registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+            uri?.let {
+                images.add(it)
+            }
+        }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        binding = ActivityMainPageBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        // стартовый фрагмент
+        replaceFragment(HomePageFragment())
+
+        binding.homeButton.setOnClickListener {
+            val currentFragment = supportFragmentManager.findFragmentById(R.id.framelayout)
+
+
+            if (currentFragment !is HomePageFragment) {
+                replaceFragment(HomePageFragment())
+            }
+        }
+
+        binding.wardrobeButton.setOnClickListener {
+            replaceFragment(WardrobePageFragment())
+        }
+
+        binding.chatbotButton.setOnClickListener {
+            replaceFragment(ChatBotPageFragment())
+        }
+
+        binding.settingsButton.setOnClickListener {
+            replaceFragment(SettingsPageFragment())
+        }
+
+        binding.cameraButton.setOnClickListener {
+            replaceFragment(CameraPageFragment())
+        }
+
+    }
+
+    private fun replaceFragment(fragment: Fragment) {
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.framelayout, fragment)
+            .commit()
+    }
+}
