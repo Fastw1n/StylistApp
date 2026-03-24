@@ -1,0 +1,31 @@
+services:
+  db:
+    image: postgres:16
+    container_name: stylist_db
+    environment:
+      POSTGRES_DB: stylist
+      POSTGRES_USER: stylist
+      POSTGRES_PASSWORD: stylist
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  api:
+    build:
+      context: ./backend
+    container_name: stylist_api
+    environment:
+      DATABASE_URL: postgresql+psycopg2://stylist:stylist@db:5432/stylist
+      MEDIA_ROOT: /data/uploads
+      BASE_URL: http://localhost:8000
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - ./uploads:/data/uploads
+    depends_on:
+      - db
+
+volumes:
+  pgdata:
