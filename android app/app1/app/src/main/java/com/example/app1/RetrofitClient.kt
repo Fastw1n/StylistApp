@@ -7,13 +7,30 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitClient {
 
-    private const val BASE_URL = "http://10.0.2.2:8000/"
+    const val BASE_URL = "http://10.0.2.2:8000/"
+    @Volatile
+    private var authToken: String? = null
+
+    fun setAuthToken(token: String?) {
+        authToken = token
+    }
 
     private val logging = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY
     }
 
     private val client = OkHttpClient.Builder()
+        .addInterceptor { chain ->
+            val token = authToken
+            val request = if (token.isNullOrBlank()) {
+                chain.request()
+            } else {
+                chain.request().newBuilder()
+                    .header("Authorization", "Bearer $token")
+                    .build()
+            }
+            chain.proceed(request)
+        }
         .addInterceptor(logging)
         .build()
 

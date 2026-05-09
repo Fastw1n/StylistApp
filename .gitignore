@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# Backend runtime media
+server-module/uploads/
+
+# Large local ML artifacts
+image-processing-module/models/
+
+# Android local/build files
+android app/app1/.gradle/
+android app/app1/.idea/
+android app/app1/.kotlin/
+android app/app1/build/
+android app/app1/app/build/
+android app/app1/local.properties

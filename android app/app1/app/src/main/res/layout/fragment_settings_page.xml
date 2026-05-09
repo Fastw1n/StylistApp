@@ -1,266 +1,411 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".SettingsPageFragment"
-    android:background="@color/white">
+    android:background="@color/white"
+    android:fillViewport="true">
 
     <LinearLayout
-        android:id="@+id/linearLayout14"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="center_vertical"
-        android:orientation="vertical">
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="20dp"
+        android:paddingTop="24dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="24dp">
 
-        <LinearLayout
-            android:id="@+id/linearLayout5"
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Настройки"
+            android:textColor="@color/black"
+            android:textSize="30sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="Профиль, гардероб и персонализация"
+            android:textColor="@color/gray"
+            android:textSize="16sp" />
+
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
-            android:orientation="horizontal"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
-
-            <ImageView
-                android:id="@+id/imageView2"
-                android:layout_width="90dp"
-                android:layout_height="90dp"
-                android:layout_marginStart="20dp"
-                android:background="@drawable/wardrobe_maiki_background"
-                android:src="@drawable/ic_group_6" />
+            app:cardCornerRadius="8dp"
+            app:cardElevation="2dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_marginStart="15dp"
-                android:gravity="center"
-                android:orientation="vertical">
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="16dp">
+
+                <ImageView
+                    android:layout_width="72dp"
+                    android:layout_height="72dp"
+                    android:background="@drawable/wardrobe_maiki_background"
+                    android:contentDescription="Профиль"
+                    android:padding="14dp"
+                    android:src="@drawable/ic_group_6" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/profileNameText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Пользователь Helpic"
+                        android:textColor="@color/black"
+                        android:textSize="20sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/profileSubtitleText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="В гардеробе 0 вещей"
+                        android:textColor="@color/gray"
+                        android:textSize="15sp" />
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <TextView
+            style="@style/SettingsSectionTitle"
+            android:text="Гардероб" />
+
+        <LinearLayout
+            android:id="@+id/openWardrobeRow"
+            style="@style/SettingsRow"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground">
+
+            <ImageView
+                style="@style/SettingsRowIcon"
+                android:src="@drawable/ic_wardrobe" />
+
+            <LinearLayout style="@style/SettingsRowTextGroup">
 
                 <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Имя пользователя"
-                    android:textSize="20dp">
-
-                </TextView>
+                    style="@style/SettingsRowTitle"
+                    android:text="Все вещи" />
 
                 <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Ник пользователя"
-                    android:textColor="@color/black"
-                    android:textSize="20dp">
-
-                </TextView>
-
+                    android:id="@+id/wardrobeCountText"
+                    style="@style/SettingsRowSubtitle"
+                    android:text="Вещей: 0" />
             </LinearLayout>
         </LinearLayout>
 
         <LinearLayout
-            android:id="@+id/linearLayout6"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="15dp"
-            android:orientation="horizontal"
-            app:layout_constraintTop_toBottomOf="@+id/linearLayout5">
+            android:id="@+id/syncWardrobeRow"
+            style="@style/SettingsRow"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground">
 
             <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="10dp"
-                android:src="@drawable/cloud">
+                style="@style/SettingsRowIcon"
+                android:src="@drawable/ic_sets" />
 
-            </ImageView>
+            <LinearLayout style="@style/SettingsRowTextGroup">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Погода"
-                android:textColor="@color/black"
-                android:textSize="20dp">
+                <TextView
+                    style="@style/SettingsRowTitle"
+                    android:text="Синхронизировать" />
 
-            </TextView>
-
-
+                <TextView
+                    style="@style/SettingsRowSubtitle"
+                    android:text="Обновить вещи с сервера" />
+            </LinearLayout>
         </LinearLayout>
 
         <LinearLayout
-            android:id="@+id/linearLayout7"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:orientation="horizontal"
-            app:layout_constraintTop_toBottomOf="@+id/linearLayout6"
-            tools:layout_editor_absoluteX="1dp">
+            android:id="@+id/clearCacheRow"
+            style="@style/SettingsRow"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground">
 
             <ImageView
+                style="@style/SettingsRowIcon"
+                android:src="@drawable/ic_cut" />
+
+            <LinearLayout style="@style/SettingsRowTextGroup">
+
+                <TextView
+                    style="@style/SettingsRowTitle"
+                    android:text="Очистить локальный кэш" />
+
+                <TextView
+                    style="@style/SettingsRowSubtitle"
+                    android:text="Удалить сохраненные на устройстве вещи" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <TextView
+            style="@style/SettingsSectionTitle"
+            android:text="Персонализация" />
+
+        <LinearLayout
+            android:id="@+id/weatherAdviceRow"
+            style="@style/SettingsRow"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground">
+
+            <ImageView
+                style="@style/SettingsRowIcon"
+                android:src="@drawable/cloud" />
+
+            <LinearLayout style="@style/SettingsRowTextGroup">
+
+                <TextView
+                    style="@style/SettingsRowTitle"
+                    android:text="Советы по погоде" />
+
+                <TextView
+                    android:id="@+id/weatherSubtitleText"
+                    style="@style/SettingsRowSubtitle"
+                    android:text="Учитывать температуру и осадки" />
+            </LinearLayout>
+
+            <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/weatherSwitch"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="10dp"
-                android:src="@drawable/ic_sets">
-
-            </ImageView>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Настройки главного экрана"
-                android:textColor="@color/black"
-                android:textSize="20dp">
-
-            </TextView>
+                android:layout_height="wrap_content" />
         </LinearLayout>
 
         <LinearLayout
-            android:id="@+id/linearLayout8"
+            android:id="@+id/weatherSettingsPanel"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:orientation="horizontal"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/linearLayout7">
+            android:layout_marginStart="50dp"
+            android:layout_marginBottom="10dp"
+            android:orientation="vertical"
+            android:visibility="gone">
 
-            <ImageView
-                android:layout_width="wrap_content"
+            <RadioGroup
+                android:id="@+id/weatherModeGroup"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="10dp"
-                android:src="@drawable/ic_params">
+                android:orientation="horizontal">
 
-            </ImageView>
+                <RadioButton
+                    android:id="@+id/weatherGeoRadio"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Геопозиция"
+                    android:textColor="@color/black"
+                    android:textSize="15sp" />
 
-            <TextView
-                android:layout_width="wrap_content"
+                <RadioButton
+                    android:id="@+id/weatherCityRadio"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="14dp"
+                    android:text="Город"
+                    android:textColor="@color/black"
+                    android:textSize="15sp" />
+            </RadioGroup>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/weatherCityInputLayout"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Параметры тела"
-                android:textColor="@color/black"
-                android:textSize="20dp">
+                android:layout_marginTop="8dp"
+                android:hint="Город"
+                android:visibility="gone"
+                app:boxBackgroundMode="outline"
+                app:boxCornerRadiusBottomEnd="8dp"
+                app:boxCornerRadiusBottomStart="8dp"
+                app:boxCornerRadiusTopEnd="8dp"
+                app:boxCornerRadiusTopStart="8dp">
 
-            </TextView>
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/weatherCityEditText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="text|textCapWords|textNoSuggestions"
+                    android:maxLines="1"
+                    android:singleLine="true" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <LinearLayout
+                android:id="@+id/weatherCitySuggestionsContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:orientation="vertical"
+                android:visibility="gone" />
+
+            <Button
+                android:id="@+id/saveWeatherCityButton"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:backgroundTint="@color/black"
+                android:text="Применить город"
+                android:textAllCaps="false"
+                android:textColor="@color/white"
+                android:textSize="15sp"
+                android:visibility="gone" />
         </LinearLayout>
 
         <LinearLayout
-            android:id="@+id/linearLayout9"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:orientation="horizontal"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/linearLayout8">
+            android:id="@+id/bodyParamsRow"
+            style="@style/SettingsRow"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground">
 
             <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="10dp"
-                android:src="@drawable/ic_rington">
+                style="@style/SettingsRowIcon"
+                android:src="@drawable/ic_params" />
 
-            </ImageView>
+            <LinearLayout style="@style/SettingsRowTextGroup">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Уведомления"
-                android:textColor="@color/black"
-                android:textSize="20dp">
+                <TextView
+                    style="@style/SettingsRowTitle"
+                    android:text="Параметры тела" />
 
-            </TextView>
+                <TextView
+                    android:id="@+id/bodyParamsSubtitleText"
+                    style="@style/SettingsRowSubtitle"
+                    android:text="Рост, размер и посадка для примерки" />
+            </LinearLayout>
         </LinearLayout>
 
         <LinearLayout
-            android:id="@+id/linearLayout11"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="426dp"
-            android:orientation="horizontal"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent">
+            android:id="@+id/stylePrefsRow"
+            style="@style/SettingsRow"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground">
 
             <ImageView
+                style="@style/SettingsRowIcon"
+                android:src="@drawable/ic_fitting" />
+
+            <LinearLayout style="@style/SettingsRowTextGroup">
+
+                <TextView
+                    style="@style/SettingsRowTitle"
+                    android:text="Предпочтения стиля" />
+
+                <TextView
+                    style="@style/SettingsRowSubtitle"
+                    android:text="Casual, office, sport и другие стили" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <TextView
+            style="@style/SettingsSectionTitle"
+            android:text="Приложение" />
+
+        <LinearLayout style="@style/SettingsRow">
+
+            <ImageView
+                style="@style/SettingsRowIcon"
+                android:src="@drawable/ic_rington" />
+
+            <LinearLayout style="@style/SettingsRowTextGroup">
+
+                <TextView
+                    style="@style/SettingsRowTitle"
+                    android:text="Уведомления" />
+
+                <TextView
+                    style="@style/SettingsRowSubtitle"
+                    android:text="Напоминания о погоде и капсулах" />
+            </LinearLayout>
+
+            <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/notificationsSwitch"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="10dp"
-                android:src="@drawable/ic_moon">
+                android:layout_height="wrap_content" />
+        </LinearLayout>
 
-            </ImageView>
+        <LinearLayout style="@style/SettingsRow">
 
-            <TextView
+            <ImageView
+                style="@style/SettingsRowIcon"
+                android:src="@drawable/ic_moon" />
+
+            <LinearLayout style="@style/SettingsRowTextGroup">
+
+                <TextView
+                    style="@style/SettingsRowTitle"
+                    android:text="Темная тема" />
+
+                <TextView
+                    style="@style/SettingsRowSubtitle"
+                    android:text="Переключить оформление приложения" />
+            </LinearLayout>
+
+            <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/darkThemeSwitch"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Тёмная тема"
-                android:textColor="@color/black"
-                android:textSize="20dp">
-
-            </TextView>
-
+                android:layout_height="wrap_content" />
         </LinearLayout>
 
         <LinearLayout
-            android:id="@+id/linearLayout12"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:orientation="horizontal"
-            app:layout_constraintTop_toBottomOf="@+id/linearLayout11"
-            tools:layout_editor_absoluteX="1dp">
+            android:id="@+id/languageRow"
+            style="@style/SettingsRow"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground">
 
             <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="10dp"
-                android:src="@drawable/ic_lang">
+                style="@style/SettingsRowIcon"
+                android:src="@drawable/ic_lang" />
 
-            </ImageView>
+            <LinearLayout style="@style/SettingsRowTextGroup">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Язык"
-                android:textColor="@color/black"
-                android:textSize="20dp">
+                <TextView
+                    style="@style/SettingsRowTitle"
+                    android:text="Язык" />
 
-            </TextView>
-
+                <TextView
+                    style="@style/SettingsRowSubtitle"
+                    android:text="Русский" />
+            </LinearLayout>
         </LinearLayout>
 
         <LinearLayout
-            android:id="@+id/linearLayout13"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="1dp"
-            android:layout_marginEnd="1dp"
-            android:orientation="horizontal"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/linearLayout14">
+            android:id="@+id/logoutRow"
+            style="@style/SettingsRow"
+            android:layout_marginTop="18dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground">
 
             <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="10dp"
-                android:src="@drawable/ic_cut">
+                style="@style/SettingsRowIcon"
+                android:src="@drawable/ic_delete" />
 
-            </ImageView>
+            <LinearLayout style="@style/SettingsRowTextGroup">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Очистить кэш"
-                android:textColor="@color/black"
-                android:textSize="20dp">
+                <TextView
+                    style="@style/SettingsRowTitle"
+                    android:text="Выйти из профиля" />
 
-            </TextView>
+                <TextView
+                    style="@style/SettingsRowSubtitle"
+                    android:text="Вернуться на экран входа" />
+            </LinearLayout>
         </LinearLayout>
     </LinearLayout>
-
-
-
-
-
-
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.core.widget.NestedScrollView>

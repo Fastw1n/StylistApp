@@ -1,16 +1,21 @@
 package com.example.app1
 
+import android.Manifest
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.recyclerview.widget.RecyclerView
-import androidx.viewpager2.widget.ViewPager2
 import android.widget.ImageButton
 import android.widget.ImageView
+import android.widget.TextView
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.RecyclerView
+import androidx.viewpager2.widget.ViewPager2
+import kotlinx.coroutines.launch
 
 class HomePageFragment : Fragment() {
 
@@ -19,8 +24,19 @@ class HomePageFragment : Fragment() {
     private lateinit var btnNext: ImageButton
     private lateinit var autoScrollHandler: Handler
     private lateinit var autoScrollRunnable: Runnable
-    private val autoScrollInterval = 3000L // 3 секунды
+    private lateinit var weatherCard: View
+    private lateinit var weatherTempText: TextView
+    private lateinit var weatherPlaceText: TextView
+    private lateinit var weatherDetailsText: TextView
 
+    private val autoScrollInterval = 3000L
+    private var isWeatherExpanded = false
+
+    private val locationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) {
+        loadWeather()
+    }
 
     private val imageList = listOf(
         R.drawable.img_first,
@@ -30,28 +46,104 @@ class HomePageFragment : Fragment() {
     )
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
+        inflater: LayoutInflater,
+        container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
+    ): View {
         val view = inflater.inflate(R.layout.fragment_home_page, container, false)
 
-
         viewPager = view.findViewById(R.id.imagePager)
-
-
         btnPrev = view.findViewById(R.id.btnPrev)
         btnNext = view.findViewById(R.id.btnNext)
+        weatherCard = view.findViewById(R.id.homeWeatherCard)
+        weatherTempText = view.findViewById(R.id.homeWeatherTempText)
+        weatherPlaceText = view.findViewById(R.id.homeWeatherPlaceText)
+        weatherDetailsText = view.findViewById(R.id.homeWeatherDetailsText)
 
-
-        val adapter = ImagePagerAdapter(imageList)
-        viewPager.adapter = adapter
+        viewPager.adapter = ImagePagerAdapter(imageList)
 
         setupAutoScroll()
-
         setupButtonListeners()
+        setupWeatherCard()
+        loadWeather()
 
         return view
+    }
+
+    private fun setupWeatherCard() {
+        weatherCard.setOnClickListener {
+            if (WeatherPreferences.getMode(requireContext()) == WeatherPreferences.MODE_GEO &&
+                !WeatherLocationProvider.hasLocationPermission(requireContext())
+            ) {
+                requestLocationPermission()
+            } else {
+                isWeatherExpanded = !isWeatherExpanded
+                renderWeatherExpandedState()
+            }
+        }
+    }
+
+    private fun loadWeather() {
+        if (!WeatherPreferences.isEnabled(requireContext())) {
+            weatherCard.visibility = View.GONE
+            return
+        }
+
+        weatherCard.visibility = View.VISIBLE
+
+        if (WeatherPreferences.getMode(requireContext()) == WeatherPreferences.MODE_GEO &&
+            !WeatherLocationProvider.hasLocationPermission(requireContext())
+        ) {
+            weatherTempText.text = "Погода"
+            weatherPlaceText.text = "Нужна геопозиция"
+            weatherDetailsText.text = "Нажмите, чтобы разрешить"
+            isWeatherExpanded = true
+            renderWeatherExpandedState()
+            requestLocationPermission()
+            return
+        }
+
+        weatherTempText.text = "--°C"
+        weatherPlaceText.text = "Загрузка..."
+        weatherDetailsText.text = ""
+        renderWeatherExpandedState()
+
+        lifecycleScope.launch {
+            runCatching {
+                WeatherRepository.loadCurrentWeather(requireContext())
+            }.onSuccess { weather ->
+                if (weather == null) {
+                    weatherCard.visibility = View.GONE
+                } else {
+                    weatherCard.visibility = View.VISIBLE
+                    weatherTempText.text = weather.temperatureText()
+                    weatherPlaceText.text = weather.placeName
+                    weatherDetailsText.text = weather.detailsText()
+                    renderWeatherExpandedState()
+                }
+            }.onFailure { error ->
+                weatherTempText.text = "Погода"
+                weatherPlaceText.text = "Не удалось обновить"
+                weatherDetailsText.text = error.message ?: "Проверьте настройки"
+                isWeatherExpanded = true
+                renderWeatherExpandedState()
+            }
+        }
+    }
+
+    private fun renderWeatherExpandedState() {
+        val detailsVisibility = if (isWeatherExpanded) View.VISIBLE else View.GONE
+        weatherPlaceText.visibility = detailsVisibility
+        weatherDetailsText.visibility = detailsVisibility
+    }
+
+    private fun requestLocationPermission() {
+        locationPermissionLauncher.launch(
+            arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            )
+        )
     }
 
     private fun setupAutoScroll() {
@@ -112,6 +204,9 @@ class HomePageFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         autoScrollHandler.postDelayed(autoScrollRunnable, autoScrollInterval)
+        if (::weatherCard.isInitialized) {
+            loadWeather()
+        }
     }
 
     override fun onPause() {

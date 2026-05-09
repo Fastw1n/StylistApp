@@ -1,99 +1,97 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginStart="26dp"
-    android:layout_marginEnd="26dp"
-    android:layout_marginTop="20dp"
     android:layout_gravity="top"
-    android:radius="16dp">
+    android:layout_marginStart="20dp"
+    android:layout_marginTop="20dp"
+    android:layout_marginEnd="20dp"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="8dp">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/white"
         android:orientation="vertical"
-        android:layout_gravity="top"
-        android:background="@color/allum">
+        android:padding="18dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Добавить вещь"
+            android:textColor="@color/black"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Выберите источник фото для распознавания"
+            android:textColor="@color/gray"
+            android:textSize="15sp" />
 
         <LinearLayout
             android:id="@+id/btnTakePhoto"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginVertical="7dp">
-
-
+            style="@style/AddItemOptionRow"
+            android:layout_marginTop="18dp">
 
             <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/ic_by_photo"
-                android:layout_gravity="start">
-            </ImageView>
+                style="@style/AddItemOptionIcon"
+                android:src="@drawable/ic_by_photo" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Сделать фото"
-                android:textColor="@color/antik"
-                android:layout_marginHorizontal="20dp"
-                android:textSize="30dp">
-            </TextView>
+            <LinearLayout style="@style/AddItemOptionTextGroup">
+
+                <TextView
+                    style="@style/AddItemOptionTitle"
+                    android:text="Сделать фото" />
+
+                <TextView
+                    style="@style/AddItemOptionSubtitle"
+                    android:text="Открыть камеру и сфотографировать вещь" />
+            </LinearLayout>
         </LinearLayout>
 
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:id="@+id/btnPickPhotoByLink"
-            android:layout_marginVertical="7dp">
-
-
-
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/ic_by_link">
-            </ImageView>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Загрузить по ссылке с маркетплейса"
-                android:layout_marginHorizontal="20dp"
-                android:gravity="center"
-                android:textColor="@color/antik"
-                android:textSize="30dp">
-            </TextView>
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
             android:id="@+id/btnPickPhotoByGallery"
-            android:layout_marginVertical="7dp">
+            style="@style/AddItemOptionRow">
 
             <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/ic_by_gallery"
-                android:layout_gravity="start">
-            </ImageView>
+                style="@style/AddItemOptionIcon"
+                android:src="@drawable/ic_by_gallery" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Загрузить из галереи"
-                android:gravity="center"
-                android:textColor="@color/antik"
-                android:layout_marginHorizontal="20dp"
-                android:textSize="30dp">
-            </TextView>
+            <LinearLayout style="@style/AddItemOptionTextGroup">
+
+                <TextView
+                    style="@style/AddItemOptionTitle"
+                    android:text="Загрузить из галереи" />
+
+                <TextView
+                    style="@style/AddItemOptionSubtitle"
+                    android:text="Выбрать готовое фото с устройства" />
+            </LinearLayout>
         </LinearLayout>
 
+        <LinearLayout
+            android:id="@+id/btnPickPhotoByLink"
+            style="@style/AddItemOptionRow">
 
+            <ImageView
+                style="@style/AddItemOptionIcon"
+                android:src="@drawable/ic_by_link" />
+
+            <LinearLayout style="@style/AddItemOptionTextGroup">
+
+                <TextView
+                    style="@style/AddItemOptionTitle"
+                    android:text="Загрузить по ссылке" />
+
+                <TextView
+                    style="@style/AddItemOptionSubtitle"
+                    android:text="Вставить ссылку на товар или артикул Wildberries" />
+            </LinearLayout>
+        </LinearLayout>
     </LinearLayout>
-
-
-</androidx.cardview.widget.CardView>
+</com.google.android.material.card.MaterialCardView>

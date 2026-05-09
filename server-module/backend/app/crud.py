@@ -5,6 +5,7 @@ from .models import ClothingItemDraftCandidate
 from .models import (
     ClothingItemDraft,
     ClothingItem,
+    UserBodyProfile,
     DraftStatus,
     ClothingCategory,
     Season,
@@ -78,6 +79,40 @@ def get_items_by_user(db: Session, user_id: uuid.UUID) -> list[ClothingItem]:
         .order_by(ClothingItem.created_at.desc())
         .all()
     )
+
+def get_body_profile(db: Session, user_id: uuid.UUID) -> UserBodyProfile | None:
+    return (
+        db.query(UserBodyProfile)
+        .filter(UserBodyProfile.user_id == user_id)
+        .first()
+    )
+
+def upsert_body_profile(db: Session, user_id: uuid.UUID, values: dict) -> UserBodyProfile:
+    profile = get_body_profile(db, user_id)
+    if not profile:
+        profile = UserBodyProfile(user_id=user_id)
+        db.add(profile)
+
+    for field in (
+        "skin_tone",
+        "eye_color",
+        "hair_color",
+        "height_cm",
+        "weight_kg",
+        "chest_cm",
+        "waist_cm",
+    ):
+        setattr(profile, field, values.get(field))
+
+    db.commit()
+    db.refresh(profile)
+    return profile
+
+def reset_body_profile(db: Session, user_id: uuid.UUID) -> None:
+    profile = get_body_profile(db, user_id)
+    if profile:
+        db.delete(profile)
+        db.commit()
 
 def create_draft_candidate(
     db: Session,

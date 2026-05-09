@@ -1,6 +1,34 @@
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 
+class AuthRequest(BaseModel):
+    email: str
+    password: str
+
+class RegisterRequest(AuthRequest):
+    name: Optional[str] = None
+
+class UserProfileDto(BaseModel):
+    user_id: str
+    email: str
+    name: Optional[str] = None
+
+class BodyProfileDto(BaseModel):
+    skin_tone: Optional[str] = None
+    eye_color: Optional[str] = None
+    hair_color: Optional[str] = None
+    height_cm: Optional[int] = None
+    weight_kg: Optional[int] = None
+    chest_cm: Optional[int] = None
+    waist_cm: Optional[int] = None
+
+class BodyProfileRequest(BodyProfileDto):
+    pass
+
+class AuthResponse(BaseModel):
+    token: str
+    user: UserProfileDto
+
 class Color(BaseModel):
     name: str
     hex: Optional[str] = None

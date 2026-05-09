@@ -94,8 +94,12 @@ class UserBodyProfile(Base):
 
     height_cm: Mapped[int | None] = mapped_column(Integer, nullable=True)
     weight_kg: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    chest_cm: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    waist_cm: Mapped[int | None] = mapped_column(Integer, nullable=True)
     body_type: Mapped[str | None] = mapped_column(String, nullable=True)
     skin_tone: Mapped[str | None] = mapped_column(String, nullable=True)
+    eye_color: Mapped[str | None] = mapped_column(String, nullable=True)
+    hair_color: Mapped[str | None] = mapped_column(String, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

@@ -2,31 +2,34 @@ package com.example.app1
 
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
+import android.app.AlertDialog
+import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.OvershootInterpolator
+import android.widget.FrameLayout
 import android.widget.ImageButton
-import android.net.Uri
+import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import android.app.AlertDialog
-import android.widget.ImageView
-import coil.load
-import android.widget.FrameLayout
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import coil.load
+import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.TextInputLayout
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
 import java.io.FileOutputStream
-
 
 class WardrobePageFragment : Fragment() {
 
@@ -34,7 +37,6 @@ class WardrobePageFragment : Fragment() {
     private var pendingImageUri: Uri? = null
     private lateinit var jumpRunnable: Runnable
     private var preparedDraftId: String? = null
-    private var preparedNormalizedImageUrl: String? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -48,6 +50,14 @@ class WardrobePageFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         val addButton = view.findViewById<ImageButton>(R.id.add_button_wardrobe)
+        val allItemsCard = view.findViewById<View>(R.id.card_all_items)
+
+        allItemsCard.setOnClickListener {
+            openAllItems()
+        }
+
+        updateAllItemsCount(view)
+        syncWardrobeItems()
 
         addButton.setOnClickListener {
             val dialogFragment = CustomDialogFragment().apply {
@@ -59,11 +69,11 @@ class WardrobePageFragment : Fragment() {
                     }
 
                     override fun onTakePhoto() {
-                        Toast.makeText(requireContext(), "Сделать фото — скоро", Toast.LENGTH_SHORT).show()
+                        openCamera()
                     }
 
                     override fun onImportByLink() {
-                        Toast.makeText(requireContext(), "Загрузка по ссылке — скоро", Toast.LENGTH_SHORT).show()
+                        showLinkImportDialog()
                     }
                 }
             }
@@ -74,10 +84,9 @@ class WardrobePageFragment : Fragment() {
         jumpRunnable = object : Runnable {
             override fun run() {
                 startJumpAnimation(addButton)
-                handler.postDelayed(this, 2000) // каждые 2 секунды
+                handler.postDelayed(this, 2000)
             }
         }
-
 
         handler.postDelayed(jumpRunnable, 2000)
     }
@@ -85,6 +94,38 @@ class WardrobePageFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         handler.removeCallbacks(jumpRunnable)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        view?.let(::updateAllItemsCount)
+    }
+
+    private fun openAllItems() {
+        parentFragmentManager.beginTransaction()
+            .replace(R.id.framelayout, ClothingItemsFragment.newInstance())
+            .addToBackStack("all_items")
+            .commit()
+    }
+
+    private fun openCamera() {
+        parentFragmentManager.beginTransaction()
+            .replace(R.id.framelayout, CameraPageFragment())
+            .addToBackStack("camera_add_item")
+            .commit()
+    }
+
+    private fun updateAllItemsCount(view: View) {
+        val count = WardrobeContainer.getAllItems(requireContext()).size
+        view.findViewById<TextView>(R.id.all_items_count).text = "Вещей: $count"
+    }
+
+    private fun syncWardrobeItems() {
+        lifecycleScope.launch {
+            WardrobeSyncer.syncFromBackend(requireContext()).onSuccess {
+                view?.let(::updateAllItemsCount)
+            }
+        }
     }
 
     private fun uriToMultipart(uri: Uri): MultipartBody.Part {
@@ -99,8 +140,7 @@ class WardrobePageFragment : Fragment() {
             }
         }
 
-        val requestFile = tempFile
-            .asRequestBody("image/*".toMediaTypeOrNull())
+        val requestFile = tempFile.asRequestBody("image/*".toMediaTypeOrNull())
 
         return MultipartBody.Part.createFormData(
             "image",
@@ -115,12 +155,7 @@ class WardrobePageFragment : Fragment() {
                 Toast.makeText(requireContext(), "Загрузка...", Toast.LENGTH_SHORT).show()
 
                 val imagePart = uriToMultipart(uri)
-                val response = RetrofitClient.api.prepareItem(imagePart)
-
-                preparedDraftId = response.draft_id
-                preparedNormalizedImageUrl = response.normalized_image_url
-
-                showPreparedPreviewDialog(response)
+                prepareAndShowCandidates(imagePart)
 
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -133,11 +168,150 @@ class WardrobePageFragment : Fragment() {
         }
     }
 
-    private fun addToTshirtsStub(uri: Uri) {
+    private suspend fun prepareAndShowCandidates(imagePart: MultipartBody.Part) {
+        val response = RetrofitClient.api.prepareItem(imagePart)
+
+        preparedDraftId = response.draft_id
+
+        if (response.items.isEmpty()) {
+            Toast.makeText(requireContext(), "Ничего не найдено", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        showPreparedCandidatesDialog(response.items, 0)
+    }
+
+    private fun showLinkImportDialog() {
+        val contentView = layoutInflater.inflate(R.layout.dialog_link_import, null)
+        val inputLayout = contentView.findViewById<TextInputLayout>(R.id.linkInputLayout)
+        val editText = contentView.findViewById<TextInputEditText>(R.id.linkEditText)
+
+        val dialog = AlertDialog.Builder(requireContext())
+            .setTitle("Загрузка по ссылке")
+            .setView(contentView)
+            .setNegativeButton("Отмена", null)
+            .setPositiveButton("Найти", null)
+            .create()
+
+        dialog.setOnShowListener {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                val query = editText.text?.toString().orEmpty().trim()
+                if (query.isBlank()) {
+                    inputLayout.error = "Введите ссылку или артикул"
+                    return@setOnClickListener
+                }
+
+                inputLayout.error = null
+                dialog.dismiss()
+                resolveMarketplaceLink(query)
+            }
+        }
+
+        dialog.show()
+    }
+
+    private fun resolveMarketplaceLink(query: String) {
+        lifecycleScope.launch {
+            Toast.makeText(requireContext(), "Ищу фото товара...", Toast.LENGTH_SHORT).show()
+
+            runCatching {
+                MarketplaceLinkResolver.resolve(query)
+            }.onSuccess { importedImage ->
+                showImportedLinkPreviewDialog(importedImage)
+            }.onFailure { error ->
+                Toast.makeText(
+                    requireContext(),
+                    error.message ?: "Не удалось обработать ссылку",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
+    }
+
+    private fun showImportedLinkPreviewDialog(importedImage: ImportedMarketplaceImage) {
+        val container = FrameLayout(requireContext()).apply {
+            val pad = (16 * resources.displayMetrics.density).toInt()
+            setPadding(pad, pad, pad, pad)
+        }
+
+        val imageView = ImageView(requireContext()).apply {
+            layoutParams = FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                (resources.displayMetrics.heightPixels * 0.42f).toInt()
+            )
+            scaleType = ImageView.ScaleType.FIT_CENTER
+            load(importedImage.imageUrl) {
+                crossfade(true)
+                placeholder(R.drawable.ic_wardrobe)
+                error(R.drawable.ic_wardrobe)
+            }
+        }
+
+        container.addView(imageView)
+
+        AlertDialog.Builder(requireContext())
+            .setTitle("Фото товара найдено")
+            .setMessage("Проверьте, что на фото нужная вещь. После подтверждения отправлю ее на распознавание.")
+            .setView(container)
+            .setNegativeButton("Отмена", null)
+            .setPositiveButton("Распознать") { dialog, _ ->
+                dialog.dismiss()
+                uploadImportedImage(importedImage)
+            }
+            .show()
+    }
+
+    private fun uploadImportedImage(importedImage: ImportedMarketplaceImage) {
+        lifecycleScope.launch {
+            try {
+                Toast.makeText(requireContext(), "Загрузка по ссылке...", Toast.LENGTH_SHORT).show()
+                prepareAndShowCandidates(importedImage.toMultipart())
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Toast.makeText(
+                    requireContext(),
+                    "Ошибка загрузки: ${e.message}",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
+    }
+
+    private fun ImportedMarketplaceImage.toMultipart(): MultipartBody.Part {
+        val requestBody = bytes.toRequestBody(mimeType.toMediaTypeOrNull())
+        return MultipartBody.Part.createFormData("image", fileName, requestBody)
+    }
+
+    private fun prepareItemsFromUri(uri: Uri) {
         uploadAndPrepare(uri)
     }
 
-    private fun confirmPreparedItem() {
+    private fun showPreparedCandidatesDialog(
+        items: List<DraftCandidateDto>,
+        startIndex: Int
+    ) {
+        if (items.isEmpty()) return
+
+        DetectedItemsReviewDialogFragment().apply {
+            this.items = items
+            this.startIndex = startIndex
+            onConfirmSelected = { candidateIds ->
+                confirmPreparedItems(candidateIds)
+            }
+        }.show(childFragmentManager, "DetectedItemsReviewDialog")
+    }
+
+    private fun loadWardrobeItems() {
+        val savedItemsCount = WardrobeContainer.getAllItems(requireContext()).size
+        view?.let(::updateAllItemsCount)
+        Toast.makeText(
+            requireContext(),
+            "Всего вещей в гардеробе: $savedItemsCount",
+            Toast.LENGTH_SHORT
+        ).show()
+    }
+
+    private fun confirmPreparedItems(candidateIds: List<String>) {
         val draftId = preparedDraftId ?: run {
             Toast.makeText(requireContext(), "Нет draft_id", Toast.LENGTH_SHORT).show()
             return
@@ -147,17 +321,26 @@ class WardrobePageFragment : Fragment() {
             try {
                 val request = ConfirmRequest(
                     draft_id = draftId,
-                    user_overrides = mapOf("category" to "top"),
-                    tags = emptyList()
+                    selected_items = candidateIds.map {
+                        ConfirmSelectedItem(
+                            candidate_id = it,
+                            user_overrides = null
+                        )
+                    }
                 )
 
                 val response = RetrofitClient.api.confirmItem(request)
+                WardrobeContainer.addConfirmedItems(requireContext(), response.items)
+                WardrobeSyncer.syncFromBackend(requireContext())
+                updateAllItemsCount(requireView())
 
                 Toast.makeText(
                     requireContext(),
-                    "Вещь добавлена: ${response.item_id}",
+                    "Сохранено вещей: ${response.items.size}",
                     Toast.LENGTH_LONG
                 ).show()
+
+                loadWardrobeItems()
 
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -176,7 +359,7 @@ class WardrobePageFragment : Fragment() {
             setPadding(pad, pad, pad, pad)
         }
 
-        val imageHeight = (resources.displayMetrics.heightPixels * 0.45f).toInt() // 45% высоты экрана
+        val imageHeight = (resources.displayMetrics.heightPixels * 0.45f).toInt()
 
         val imageView = ImageView(requireContext()).apply {
             layoutParams = FrameLayout.LayoutParams(
@@ -186,12 +369,8 @@ class WardrobePageFragment : Fragment() {
             scaleType = ImageView.ScaleType.FIT_CENTER
         }
 
-        // Загружаем картинку
         imageView.load(uri) {
             crossfade(true)
-            // Если хочешь дебаг: покажи заглушку/ошибку
-            // placeholder(R.drawable.placeholder)
-            // error(R.drawable.error)
         }
 
         container.addView(imageView)
@@ -212,52 +391,12 @@ class WardrobePageFragment : Fragment() {
             .setPositiveButton("Принять") { dialog, _ ->
                 dialog.dismiss()
                 pendingImageUri?.let { acceptedUri ->
-                    addToTshirtsStub(acceptedUri)
+                    prepareItemsFromUri(acceptedUri)
                 }
                 pendingImageUri = null
             }
             .show()
     }
-
-    private fun showPreparedPreviewDialog(response: PrepareResponse) {
-        val container = FrameLayout(requireContext()).apply {
-            val pad = (16 * resources.displayMetrics.density).toInt()
-            setPadding(pad, pad, pad, pad)
-        }
-
-        val imageHeight = (resources.displayMetrics.heightPixels * 0.45f).toInt()
-
-        val imageView = ImageView(requireContext()).apply {
-            layoutParams = FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                imageHeight
-            )
-            scaleType = ImageView.ScaleType.FIT_CENTER
-        }
-
-        imageView.load(response.normalized_image_url) {
-            crossfade(true)
-        }
-
-        container.addView(imageView)
-
-        val categoryText = response.attributes.category ?: "Не определено"
-
-        AlertDialog.Builder(requireContext())
-            .setTitle("Результат анализа")
-            .setMessage("Категория: $categoryText")
-            .setView(container)
-            .setNegativeButton("Отмена") { dialog, _ ->
-                dialog.dismiss()
-            }
-            .setPositiveButton("Добавить") { dialog, _ ->
-                dialog.dismiss()
-                confirmPreparedItem()
-            }
-            .show()
-    }
-
-
 
     private val pickImageLauncher = registerForActivityResult(
         ActivityResultContracts.PickVisualMedia()
@@ -270,28 +409,6 @@ class WardrobePageFragment : Fragment() {
         pendingImageUri = uri
         showMiniPreviewDialog(uri)
     }
-
-//    private val pickImageLauncher = registerForActivityResult(
-//        ActivityResultContracts.PickVisualMedia()
-//    ) { uri: Uri? ->
-//        try {
-//            if (uri == null) {
-//                Toast.makeText(requireContext(), "Выбор отменён", Toast.LENGTH_SHORT).show()
-//                return@registerForActivityResult
-//            }
-//
-//            Toast.makeText(requireContext(), "URI получен: $uri", Toast.LENGTH_LONG).show()
-//            pendingImageUri = uri
-//
-//            // ВРЕМЕННО не открываем preview
-//            // showMiniPreviewDialog(uri)
-//
-//        } catch (e: Exception) {
-//            e.printStackTrace()
-//            Toast.makeText(requireContext(), "Ошибка: ${e.message}", Toast.LENGTH_LONG).show()
-//        }
-//    }
-
 
     private fun startJumpAnimation(view: View) {
         val up = ObjectAnimator.ofFloat(view, View.TRANSLATION_Y, 0f, -50f)

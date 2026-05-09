@@ -1,8 +1,13 @@
 import uuid
-from fastapi import FastAPI, UploadFile, File, Depends, HTTPException
+from fastapi import FastAPI, UploadFile, File, Depends, Header, HTTPException
 from fastapi.staticfiles import StaticFiles
+from sqlalchemy import inspect, text
 from sqlalchemy.orm import Session
 from .schemas import (
+    AuthRequest,
+    AuthResponse,
+    BodyProfileDto,
+    BodyProfileRequest,
     PrepareResponse,
     ConfirmRequest,
     CancelRequest,
@@ -11,13 +16,19 @@ from .schemas import (
     DraftCandidateResponse,
     ConfirmResponse,
     ConfirmedItemDto,
+    RegisterRequest,
     Attributes,
+    UserProfileDto,
 )
+from .auth import authenticate_user, create_user, token_for_user, user_from_token
 from .crud import (
     create_draft,
     get_draft,
     cancel_draft,
     get_items_by_user,
+    get_body_profile,
+    upsert_body_profile,
+    reset_body_profile,
     create_draft_candidate,
     confirm_candidates_to_items,
 )
@@ -34,6 +45,7 @@ app = FastAPI(title="Stylist API")
 @app.on_event("startup")
 def on_startup():
     Base.metadata.create_all(bind=engine)
+    ensure_body_profile_schema()
 
 
 storage.ensure_dirs()
@@ -41,7 +53,7 @@ app.mount("/media", StaticFiles(directory=storage.MEDIA_ROOT), name="media")
 
 
 def get_or_create_demo_user(db: Session) -> uuid.UUID:
-    user = db.query(User).first()
+    user = db.query(User).filter(User.email == "demo@demo.local").first()
     if not user:
         user = User(
             email="demo@demo.local",
@@ -54,12 +66,136 @@ def get_or_create_demo_user(db: Session) -> uuid.UUID:
     return user.id
 
 
+def user_profile(user: User) -> UserProfileDto:
+    return UserProfileDto(
+        user_id=str(user.id),
+        email=user.email or "",
+        name=user.name,
+    )
+
+
+def ensure_body_profile_schema() -> None:
+    expected_columns = {
+        "eye_color": "VARCHAR",
+        "hair_color": "VARCHAR",
+        "chest_cm": "INTEGER",
+        "waist_cm": "INTEGER",
+    }
+
+    with engine.begin() as connection:
+        existing_columns = {
+            column["name"]
+            for column in inspect(connection).get_columns("user_body_profile")
+        }
+
+        for column_name, column_type in expected_columns.items():
+            if column_name not in existing_columns:
+                connection.execute(
+                    text(f"ALTER TABLE user_body_profile ADD COLUMN {column_name} {column_type}")
+                )
+
+
+def body_profile_response(profile) -> BodyProfileDto:
+    if not profile:
+        return BodyProfileDto()
+
+    return BodyProfileDto(
+        skin_tone=profile.skin_tone,
+        eye_color=profile.eye_color,
+        hair_color=profile.hair_color,
+        height_cm=profile.height_cm,
+        weight_kg=profile.weight_kg,
+        chest_cm=profile.chest_cm,
+        waist_cm=profile.waist_cm,
+    )
+
+
+def get_current_user_id(
+    db: Session,
+    authorization: str | None,
+) -> uuid.UUID:
+    if authorization and authorization.lower().startswith("bearer "):
+        token = authorization.split(" ", 1)[1].strip()
+        user = user_from_token(db, token)
+        if user:
+            return user.id
+        raise HTTPException(status_code=401, detail="Invalid auth token")
+
+    return get_or_create_demo_user(db)
+
+
+@app.post("/v1/auth/register", response_model=AuthResponse)
+async def register_user(body: RegisterRequest, db: Session = Depends(get_db)):
+    user = create_user(
+        db=db,
+        email=body.email,
+        password=body.password,
+        name=body.name,
+    )
+    return AuthResponse(
+        token=token_for_user(user),
+        user=user_profile(user),
+    )
+
+
+@app.post("/v1/auth/login", response_model=AuthResponse)
+async def login_user(body: AuthRequest, db: Session = Depends(get_db)):
+    user = authenticate_user(db, body.email, body.password)
+    return AuthResponse(
+        token=token_for_user(user),
+        user=user_profile(user),
+    )
+
+
+@app.get("/v1/auth/me", response_model=UserProfileDto)
+async def get_me(
+    authorization: str | None = Header(default=None),
+    db: Session = Depends(get_db),
+):
+    user_id = get_current_user_id(db, authorization)
+    user = db.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+    return user_profile(user)
+
+
+@app.get("/v1/profile/body", response_model=BodyProfileDto)
+async def get_user_body_profile(
+    authorization: str | None = Header(default=None),
+    db: Session = Depends(get_db),
+):
+    user_id = get_current_user_id(db, authorization)
+    return body_profile_response(get_body_profile(db, user_id))
+
+
+@app.put("/v1/profile/body", response_model=BodyProfileDto)
+async def save_user_body_profile(
+    body: BodyProfileRequest,
+    authorization: str | None = Header(default=None),
+    db: Session = Depends(get_db),
+):
+    user_id = get_current_user_id(db, authorization)
+    profile = upsert_body_profile(db, user_id, body.dict())
+    return body_profile_response(profile)
+
+
+@app.delete("/v1/profile/body", response_model=BodyProfileDto)
+async def clear_user_body_profile(
+    authorization: str | None = Header(default=None),
+    db: Session = Depends(get_db),
+):
+    user_id = get_current_user_id(db, authorization)
+    reset_body_profile(db, user_id)
+    return BodyProfileDto()
+
+
 @app.post("/v1/items/prepare", response_model=PrepareResponse)
 async def prepare_item(
     image: UploadFile = File(...),
+    authorization: str | None = Header(default=None),
     db: Session = Depends(get_db),
 ):
-    user_id = get_or_create_demo_user(db)
+    user_id = get_current_user_id(db, authorization)
 
     if not image.content_type or not image.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="Only image uploads are supported")
@@ -148,10 +284,18 @@ async def prepare_item(
     )
 
 @app.post("/v1/items/confirm", response_model=ConfirmResponse)
-async def confirm_item(body: ConfirmRequest, db: Session = Depends(get_db)):
+async def confirm_item(
+    body: ConfirmRequest,
+    authorization: str | None = Header(default=None),
+    db: Session = Depends(get_db),
+):
+    user_id = get_current_user_id(db, authorization)
     draft = get_draft(db, uuid.UUID(body.draft_id))
     if not draft:
         raise HTTPException(status_code=404, detail="Draft not found")
+
+    if draft.user_id != user_id:
+        raise HTTPException(status_code=403, detail="Draft belongs to another user")
 
     if draft.status in ("canceled", "failed"):
         raise HTTPException(status_code=400, detail=f"Draft status is {draft.status}")
@@ -181,16 +325,26 @@ async def confirm_item(body: ConfirmRequest, db: Session = Depends(get_db)):
 
 
 @app.post("/v1/items/cancel")
-async def cancel_item(body: CancelRequest, db: Session = Depends(get_db)):
+async def cancel_item(
+    body: CancelRequest,
+    authorization: str | None = Header(default=None),
+    db: Session = Depends(get_db),
+):
+    user_id = get_current_user_id(db, authorization)
     draft = get_draft(db, uuid.UUID(body.draft_id))
     if not draft:
         raise HTTPException(status_code=404, detail="Draft not found")
+    if draft.user_id != user_id:
+        raise HTTPException(status_code=403, detail="Draft belongs to another user")
     cancel_draft(db, draft)
     return {"ok": True}
 
 @app.get("/v1/items", response_model=ItemsListResponse)
-async def get_items(db: Session = Depends(get_db)):
-    user_id = get_or_create_demo_user(db)
+async def get_items(
+    authorization: str | None = Header(default=None),
+    db: Session = Depends(get_db),
+):
+    user_id = get_current_user_id(db, authorization)
     items = get_items_by_user(db, user_id)
 
     return ItemsListResponse(
