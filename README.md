@@ -35,7 +35,7 @@ TESTING.md                     инструкция по тестам и coverag
 - Android Studio для запуска Android-приложения;
 - файл весов YOLO-модели `best.pt`.
 
-Веса модели не коммитятся в репозиторий. Ссылку на скачивание весов нужно указать самостоятельно, например в тексте работы, README-форке или отдельной инструкции. В этом README намеренно нет конкретной ссылки.
+Веса модели не коммитятся в репозиторий. Файл `best.pt` можно скачать с Yandex Disk: [https://disk.yandex.ru/d/HHJ5IgZKZ66MtQ](https://disk.yandex.ru/d/HHJ5IgZKZ66MtQ).
 
 ## Подготовка весов модели
 
@@ -56,6 +56,8 @@ image-processing-module/models/best.pt
 ```text
 /app/models/best.pt
 ```
+
+Скачать `best.pt` можно с Yandex Disk: [https://disk.yandex.ru/d/HHJ5IgZKZ66MtQ](https://disk.yandex.ru/d/HHJ5IgZKZ66MtQ). После скачивания положите файл в папку `image-processing-module/models/`.
 
 Если нужен другой путь внутри контейнера, измените переменную `YOLO_WEIGHTS_PATH` в `server-module/docker-compose.yml`.
 
@@ -172,6 +174,63 @@ http://localhost:8000
 
 ```text
 http://10.0.2.2:8000/
+```
+
+## Ручной запуск image-processing-module
+
+Если backend запускается через Docker Compose, отдельный ручной запуск image-processing-module не нужен: compose сам поднимает сервис `image-processing` на порту `8001`.
+
+Для локальной разработки ML-сервис можно запускать отдельно. На Windows текущий рабочий вариант:
+
+```powershell
+cd C:\Users\user\Desktop\Stylist-repository\StylistApp\image-processing-module
+.\venv\Scripts\Activate.ps1
+uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
+```
+
+Перед запуском убедитесь, что зависимости установлены в виртуальное окружение:
+
+```powershell
+cd C:\Users\user\Desktop\Stylist-repository\StylistApp\image-processing-module
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+```
+
+На Linux-сервере команды обычно выглядят так:
+
+```bash
+cd /path/to/StylistApp/image-processing-module
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --host 0.0.0.0 --port 8001
+```
+
+Если путь к весам отличается от стандартного `models/best.pt`, задайте переменную окружения:
+
+```bash
+export YOLO_WEIGHTS_PATH=/path/to/best.pt
+uvicorn app.main:app --host 0.0.0.0 --port 8001
+```
+
+Для Windows PowerShell:
+
+```powershell
+$env:YOLO_WEIGHTS_PATH="C:\path\to\best.pt"
+uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
+```
+
+Если backend запускается не в compose, он должен знать адрес ML-сервиса:
+
+```bash
+ML_SERVICE_URL=http://localhost:8001
+```
+
+В Docker Compose это уже настроено как:
+
+```text
+ML_SERVICE_URL=http://image-processing:8001
 ```
 
 ## Тесты
