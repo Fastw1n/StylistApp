@@ -70,6 +70,8 @@ class ConfirmedItemDto(BaseModel):
     item_id: str
     normalized_image_url: str
     attributes: Attributes
+    name: Optional[str] = None
+    is_favorite: bool = False
 
 class ConfirmResponse(BaseModel):
     items: List[ConfirmedItemDto]
@@ -84,11 +86,51 @@ class ItemResponse(BaseModel):
 
 class ClothingItemDto(BaseModel):
     item_id: str
+    name: Optional[str] = None
     category: str
     subcategory: Optional[str] = None
     normalized_image_url: str
     season: Optional[str] = None
     warmth_level: Optional[int] = None
+    is_favorite: bool = False
 
 class ItemsListResponse(BaseModel):
     items: List[ClothingItemDto]
+
+class FavoriteItemRequest(BaseModel):
+    is_favorite: bool
+    name: Optional[str] = None
+
+class UpdateItemRequest(BaseModel):
+    name: Optional[str] = None
+
+class OutfitItemDto(BaseModel):
+    item_id: str
+    name: Optional[str] = None
+    category: str
+    subcategory: Optional[str] = None
+    normalized_image_url: str
+
+class OutfitDto(BaseModel):
+    outfit_id: str
+    name: Optional[str] = None
+    items: List[OutfitItemDto]
+    style: Optional[str] = None
+    colors: List[str] = []
+    season: Optional[str] = None
+
+class CreateOutfitRequest(BaseModel):
+    name: Optional[str] = None
+    item_ids: List[str]
+    style: Optional[str] = None
+    colors: List[str] = []
+    season: Optional[str] = None
+
+class UpdateOutfitRequest(BaseModel):
+    name: Optional[str] = None
+
+class DeleteOutfitResponse(BaseModel):
+    ok: bool
+
+class OutfitsListResponse(BaseModel):
+    outfits: List[OutfitDto]

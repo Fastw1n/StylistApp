@@ -44,6 +44,17 @@
             android:textSize="15sp"
             android:textStyle="bold" />
 
+        <ImageButton
+            android:id="@+id/itemMenuButton"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:layout_gravity="top|end"
+            android:layout_margin="8dp"
+            android:background="@drawable/bg_favorite_button"
+            android:contentDescription="Действия с вещью"
+            android:padding="9dp"
+            android:src="@drawable/ic_more_vert" />
+
         <TextView
             android:id="@+id/detailsText"
             android:layout_width="0dp"

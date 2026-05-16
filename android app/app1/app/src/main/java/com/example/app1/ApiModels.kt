@@ -88,7 +88,9 @@ data class ConfirmRequest(
 data class ConfirmedItemDto(
     val item_id: String,
     val normalized_image_url: String,
-    val attributes: AttributesDto
+    val attributes: AttributesDto,
+    val name: String? = null,
+    val is_favorite: Boolean = false
 )
 
 data class ConfirmResponse(
@@ -97,13 +99,51 @@ data class ConfirmResponse(
 
 data class ClothingItemDto(
     val item_id: String,
+    val name: String? = null,
     val category: String,
     val subcategory: String?,
     val normalized_image_url: String,
     val season: String?,
-    val warmth_level: Int?
+    val warmth_level: Int?,
+    val is_favorite: Boolean = false
 )
 
 data class ItemsResponse(
     val items: List<ClothingItemDto>
+)
+
+data class FavoriteItemRequest(
+    val is_favorite: Boolean,
+    val name: String? = null
+)
+
+data class UpdateItemRequest(
+    val name: String? = null
+)
+
+data class DeleteItemResponse(
+    val ok: Boolean
+)
+
+data class OutfitItemDto(
+    val item_id: String,
+    val name: String? = null,
+    val category: String,
+    val subcategory: String? = null,
+    val normalized_image_url: String
+)
+
+data class OutfitDto(
+    val outfit_id: String,
+    val name: String? = null,
+    val items: List<OutfitItemDto>
+)
+
+data class CreateOutfitRequest(
+    val name: String? = null,
+    val item_ids: List<String>
+)
+
+data class OutfitsResponse(
+    val outfits: List<OutfitDto>
 )

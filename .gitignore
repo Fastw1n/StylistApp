@@ -1,12 +1,17 @@
 # Python
 __pycache__/
 *.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
 
 # Backend runtime media
 server-module/uploads/
+server-module/backend/htmlcov/
 
 # Large local ML artifacts
 image-processing-module/models/
+image-processing-module/venv/
 
 # Android local/build files
 android app/app1/.gradle/

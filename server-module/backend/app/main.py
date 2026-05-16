@@ -19,6 +19,14 @@ from .schemas import (
     RegisterRequest,
     Attributes,
     UserProfileDto,
+    FavoriteItemRequest,
+    UpdateItemRequest,
+    CreateOutfitRequest,
+    OutfitDto,
+    OutfitItemDto,
+    OutfitsListResponse,
+    UpdateOutfitRequest,
+    DeleteOutfitResponse,
 )
 from .auth import authenticate_user, create_user, token_for_user, user_from_token
 from .crud import (
@@ -26,6 +34,16 @@ from .crud import (
     get_draft,
     cancel_draft,
     get_items_by_user,
+    get_item_by_user,
+    update_item_favorite,
+    update_item_name,
+    delete_item,
+    create_outfit,
+    get_outfits_by_user,
+    get_outfit_by_user,
+    get_outfit_items,
+    update_outfit_name,
+    delete_outfit,
     get_body_profile,
     upsert_body_profile,
     reset_body_profile,
@@ -34,7 +52,7 @@ from .crud import (
 )
 from .db import get_db, engine, Base
 from . import storage
-from .models import User, Gender, ClothingCategory, Season
+from .models import User, Gender, ClothingCategory, Season, DraftStatus
 from . import storage
 import base64
 from .ml_client import segment_image_via_ml_service
@@ -46,10 +64,14 @@ app = FastAPI(title="Stylist API")
 def on_startup():
     Base.metadata.create_all(bind=engine)
     ensure_body_profile_schema()
+    ensure_clothing_item_favorite_schema()
+    storage.ensure_dirs()
+    storage.seed_from_local_uploads()
 
 
-storage.ensure_dirs()
-app.mount("/media", StaticFiles(directory=storage.MEDIA_ROOT), name="media")
+if storage.is_local_storage():
+    storage.ensure_dirs()
+    app.mount("/media", StaticFiles(directory=storage.MEDIA_ROOT), name="media")
 
 
 def get_or_create_demo_user(db: Session) -> uuid.UUID:
@@ -95,6 +117,25 @@ def ensure_body_profile_schema() -> None:
                 )
 
 
+def ensure_clothing_item_favorite_schema() -> None:
+    expected_columns = {
+        "name": "VARCHAR",
+        "is_favorite": "BOOLEAN NOT NULL DEFAULT FALSE",
+    }
+
+    with engine.begin() as connection:
+        existing_columns = {
+            column["name"]
+            for column in inspect(connection).get_columns("clothing_items")
+        }
+
+        for column_name, column_type in expected_columns.items():
+            if column_name not in existing_columns:
+                connection.execute(
+                    text(f"ALTER TABLE clothing_items ADD COLUMN {column_name} {column_type}")
+                )
+
+
 def body_profile_response(profile) -> BodyProfileDto:
     if not profile:
         return BodyProfileDto()
@@ -110,6 +151,41 @@ def body_profile_response(profile) -> BodyProfileDto:
     )
 
 
+def clothing_item_response(item) -> ClothingItemDto:
+    return ClothingItemDto(
+        item_id=str(item.id),
+        name=item.name,
+        category=item.category.value,
+        subcategory=item.subcategory,
+        normalized_image_url=storage.url_for(item.normalized_image_key),
+        season=item.season.value if item.season else None,
+        warmth_level=item.warmth_level,
+        is_favorite=item.is_favorite,
+    )
+
+
+def outfit_item_response(item) -> OutfitItemDto:
+    return OutfitItemDto(
+        item_id=str(item.id),
+        name=item.name,
+        category=item.category.value,
+        subcategory=item.subcategory,
+        normalized_image_url=storage.url_for(item.normalized_image_key),
+    )
+
+
+def outfit_response(outfit, db: Session) -> OutfitDto:
+    items = get_outfit_items(db, outfit.id, outfit.user_id)
+    return OutfitDto(
+        outfit_id=str(outfit.id),
+        name=outfit.name,
+        items=[outfit_item_response(item) for item in items],
+        style=outfit.style,
+        colors=(outfit.context or {}).get("colors") or [],
+        season=outfit.season.value if outfit.season else None,
+    )
+
+
 def get_current_user_id(
     db: Session,
     authorization: str | None,
@@ -121,7 +197,7 @@ def get_current_user_id(
             return user.id
         raise HTTPException(status_code=401, detail="Invalid auth token")
 
-    return get_or_create_demo_user(db)
+    raise HTTPException(status_code=401, detail="Missing auth token")
 
 
 @app.post("/v1/auth/register", response_model=AuthResponse)
@@ -297,7 +373,7 @@ async def confirm_item(
     if draft.user_id != user_id:
         raise HTTPException(status_code=403, detail="Draft belongs to another user")
 
-    if draft.status in ("canceled", "failed"):
+    if draft.status in (DraftStatus.canceled, DraftStatus.failed):
         raise HTTPException(status_code=400, detail=f"Draft status is {draft.status}")
 
     if not body.selected_items:
@@ -310,6 +386,8 @@ async def confirm_item(
             ConfirmedItemDto(
                 item_id=str(item.id),
                 normalized_image_url=storage.url_for(item.normalized_image_key),
+                name=item.name,
+                is_favorite=item.is_favorite,
                 attributes=Attributes(
                     category=item.category.value if item.category else None,
                     subcategory=item.subcategory,
@@ -348,15 +426,174 @@ async def get_items(
     items = get_items_by_user(db, user_id)
 
     return ItemsListResponse(
-        items=[
-            ClothingItemDto(
-                item_id=str(item.id),
-                category=item.category.value,
-                subcategory=item.subcategory,
-                normalized_image_url=storage.url_for(item.normalized_image_key),
-                season=item.season.value if item.season else None,
-                warmth_level=item.warmth_level
-            )
-            for item in items
-        ]
+        items=[clothing_item_response(item) for item in items]
     )
+
+
+@app.put("/v1/items/{item_id}/favorite", response_model=ClothingItemDto)
+async def set_item_favorite(
+    item_id: str,
+    body: FavoriteItemRequest,
+    authorization: str | None = Header(default=None),
+    db: Session = Depends(get_db),
+):
+    user_id = get_current_user_id(db, authorization)
+
+    try:
+        parsed_item_id = uuid.UUID(item_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid item_id")
+
+    item = get_item_by_user(db, user_id, parsed_item_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    updated_item = update_item_favorite(
+        db=db,
+        item=item,
+        is_favorite=body.is_favorite,
+        name=body.name,
+    )
+
+    return clothing_item_response(updated_item)
+
+
+@app.put("/v1/items/{item_id}", response_model=ClothingItemDto)
+async def update_item(
+    item_id: str,
+    body: UpdateItemRequest,
+    authorization: str | None = Header(default=None),
+    db: Session = Depends(get_db),
+):
+    user_id = get_current_user_id(db, authorization)
+
+    try:
+        parsed_item_id = uuid.UUID(item_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid item_id")
+
+    item = get_item_by_user(db, user_id, parsed_item_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    updated_item = update_item_name(
+        db=db,
+        item=item,
+        name=body.name,
+    )
+
+    return clothing_item_response(updated_item)
+
+
+@app.delete("/v1/items/{item_id}")
+async def remove_item(
+    item_id: str,
+    authorization: str | None = Header(default=None),
+    db: Session = Depends(get_db),
+):
+    user_id = get_current_user_id(db, authorization)
+
+    try:
+        parsed_item_id = uuid.UUID(item_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid item_id")
+
+    item = get_item_by_user(db, user_id, parsed_item_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    delete_item(db, item)
+
+    return {"ok": True}
+
+
+@app.get("/v1/outfits", response_model=OutfitsListResponse)
+async def get_outfits(
+    authorization: str | None = Header(default=None),
+    db: Session = Depends(get_db),
+):
+    user_id = get_current_user_id(db, authorization)
+    outfits = get_outfits_by_user(db, user_id)
+    return OutfitsListResponse(
+        outfits=[outfit_response(outfit, db) for outfit in outfits]
+    )
+
+
+@app.post("/v1/outfits", response_model=OutfitDto)
+async def save_outfit(
+    body: CreateOutfitRequest,
+    authorization: str | None = Header(default=None),
+    db: Session = Depends(get_db),
+):
+    user_id = get_current_user_id(db, authorization)
+    if not body.item_ids:
+        raise HTTPException(status_code=400, detail="No item_ids provided")
+
+    try:
+        parsed_item_ids = [uuid.UUID(item_id) for item_id in body.item_ids]
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid item_id")
+
+    try:
+        outfit = create_outfit(
+            db=db,
+            user_id=user_id,
+            name=body.name,
+            item_ids=parsed_item_ids,
+            style=body.style,
+            colors=body.colors,
+            season=body.season,
+        )
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error))
+
+    return outfit_response(outfit, db)
+
+
+@app.put("/v1/outfits/{outfit_id}", response_model=OutfitDto)
+async def update_saved_outfit(
+    outfit_id: str,
+    body: UpdateOutfitRequest,
+    authorization: str | None = Header(default=None),
+    db: Session = Depends(get_db),
+):
+    user_id = get_current_user_id(db, authorization)
+
+    try:
+        parsed_outfit_id = uuid.UUID(outfit_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid outfit_id")
+
+    outfit = get_outfit_by_user(db, user_id, parsed_outfit_id)
+    if not outfit:
+        raise HTTPException(status_code=404, detail="Outfit not found")
+
+    updated_outfit = update_outfit_name(
+        db=db,
+        outfit=outfit,
+        name=body.name,
+    )
+
+    return outfit_response(updated_outfit, db)
+
+
+@app.delete("/v1/outfits/{outfit_id}", response_model=DeleteOutfitResponse)
+async def remove_saved_outfit(
+    outfit_id: str,
+    authorization: str | None = Header(default=None),
+    db: Session = Depends(get_db),
+):
+    user_id = get_current_user_id(db, authorization)
+
+    try:
+        parsed_outfit_id = uuid.UUID(outfit_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid outfit_id")
+
+    outfit = get_outfit_by_user(db, user_id, parsed_outfit_id)
+    if not outfit:
+        raise HTTPException(status_code=404, detail="Outfit not found")
+
+    delete_outfit(db, outfit)
+
+    return DeleteOutfitResponse(ok=True)

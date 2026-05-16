@@ -12,18 +12,22 @@ import androidx.room.Query
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.Transaction
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Entity(tableName = "wardrobe_items")
 data class WardrobeItemEntity(
     @PrimaryKey val id: String,
     @ColumnInfo(name = "sort_order") val sortOrder: Int,
+    val name: String?,
     val category: String?,
     @ColumnInfo(name = "image_url") val imageUrl: String?,
     @ColumnInfo(name = "image_uri") val imageUri: String?,
     val subcategory: String?,
     val season: String?,
     @ColumnInfo(name = "warmth_level") val warmthLevel: Int?,
-    @ColumnInfo(name = "colors_json") val colorsJson: String?
+    @ColumnInfo(name = "colors_json") val colorsJson: String?,
+    @ColumnInfo(name = "is_favorite") val isFavorite: Boolean
 )
 
 @Dao
@@ -33,6 +37,15 @@ abstract class WardrobeItemDao {
 
     @Query("SELECT COUNT(*) FROM wardrobe_items")
     abstract suspend fun count(): Int
+
+    @Query("UPDATE wardrobe_items SET name = :name, is_favorite = :isFavorite WHERE id = :id")
+    abstract suspend fun updateFavorite(id: String, isFavorite: Boolean, name: String?)
+
+    @Query("UPDATE wardrobe_items SET name = :name WHERE id = :id")
+    abstract suspend fun updateName(id: String, name: String?)
+
+    @Query("DELETE FROM wardrobe_items WHERE id = :id")
+    abstract suspend fun deleteById(id: String)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     abstract suspend fun insertAll(items: List<WardrobeItemEntity>)
@@ -51,7 +64,7 @@ abstract class WardrobeItemDao {
 
 @Database(
     entities = [WardrobeItemEntity::class],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class WardrobeCacheDatabase : RoomDatabase() {
@@ -67,7 +80,17 @@ abstract class WardrobeCacheDatabase : RoomDatabase() {
                     context.applicationContext,
                     WardrobeCacheDatabase::class.java,
                     "wardrobe_cache.db"
-                ).build().also { instance = it }
+                )
+                    .addMigrations(MIGRATION_1_2)
+                    .build()
+                    .also { instance = it }
+            }
+        }
+
+        private val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE wardrobe_items ADD COLUMN name TEXT")
+                db.execSQL("ALTER TABLE wardrobe_items ADD COLUMN is_favorite INTEGER NOT NULL DEFAULT 0")
             }
         }
     }

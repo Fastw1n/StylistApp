@@ -5,9 +5,12 @@ from .models import ClothingItemDraftCandidate
 from .models import (
     ClothingItemDraft,
     ClothingItem,
+    Outfit,
+    OutfitItem,
     UserBodyProfile,
     DraftStatus,
     ClothingCategory,
+    OutfitSource,
     Season,
 )
 
@@ -77,6 +80,142 @@ def get_items_by_user(db: Session, user_id: uuid.UUID) -> list[ClothingItem]:
         db.query(ClothingItem)
         .filter(ClothingItem.user_id == user_id)
         .order_by(ClothingItem.created_at.desc())
+        .all()
+    )
+
+def get_item_by_user(db: Session, user_id: uuid.UUID, item_id: uuid.UUID) -> ClothingItem | None:
+    return (
+        db.query(ClothingItem)
+        .filter(
+            ClothingItem.id == item_id,
+            ClothingItem.user_id == user_id,
+        )
+        .first()
+    )
+
+def update_item_favorite(
+    db: Session,
+    item: ClothingItem,
+    is_favorite: bool,
+    name: str | None,
+) -> ClothingItem:
+    item.is_favorite = is_favorite
+    if name is not None:
+        cleaned_name = name.strip()
+        item.name = cleaned_name or None
+
+    db.commit()
+    db.refresh(item)
+    return item
+
+def update_item_name(
+    db: Session,
+    item: ClothingItem,
+    name: str | None,
+) -> ClothingItem:
+    item.name = name.strip() if name and name.strip() else None
+    db.commit()
+    db.refresh(item)
+    return item
+
+def delete_item(db: Session, item: ClothingItem) -> None:
+    db.query(OutfitItem).filter(OutfitItem.clothing_item_id == item.id).delete()
+    db.delete(item)
+    db.commit()
+
+def create_outfit(
+    db: Session,
+    user_id: uuid.UUID,
+    name: str | None,
+    item_ids: list[uuid.UUID],
+    style: str | None = None,
+    colors: list[str] | None = None,
+    season: str | None = None,
+) -> Outfit:
+    owned_items = (
+        db.query(ClothingItem)
+        .filter(
+            ClothingItem.user_id == user_id,
+            ClothingItem.id.in_(item_ids),
+        )
+        .all()
+    )
+    owned_item_ids = {item.id for item in owned_items}
+    if len(owned_item_ids) != len(set(item_ids)):
+        raise ValueError("One or more items do not belong to user")
+
+    outfit_season = None
+    if season:
+        try:
+            outfit_season = Season(season)
+        except Exception:
+            raise ValueError("Invalid season")
+
+    cleaned_colors = [
+        color.strip()
+        for color in (colors or [])
+        if color and color.strip()
+    ]
+
+    outfit = Outfit(
+        user_id=user_id,
+        source=OutfitSource.user_created,
+        name=name.strip() if name and name.strip() else None,
+        style=style.strip() if style and style.strip() else None,
+        season=outfit_season,
+        context={"colors": cleaned_colors} if cleaned_colors else None,
+    )
+    db.add(outfit)
+    db.flush()
+
+    for item_id in dict.fromkeys(item_ids):
+        db.add(OutfitItem(outfit_id=outfit.id, clothing_item_id=item_id))
+
+    db.commit()
+    db.refresh(outfit)
+    return outfit
+
+def get_outfits_by_user(db: Session, user_id: uuid.UUID) -> list[Outfit]:
+    return (
+        db.query(Outfit)
+        .filter(Outfit.user_id == user_id)
+        .order_by(Outfit.created_at.desc())
+        .all()
+    )
+
+def get_outfit_by_user(db: Session, user_id: uuid.UUID, outfit_id: uuid.UUID) -> Outfit | None:
+    return (
+        db.query(Outfit)
+        .filter(
+            Outfit.id == outfit_id,
+            Outfit.user_id == user_id,
+        )
+        .first()
+    )
+
+def update_outfit_name(
+    db: Session,
+    outfit: Outfit,
+    name: str | None,
+) -> Outfit:
+    outfit.name = name.strip() if name and name.strip() else None
+    db.commit()
+    db.refresh(outfit)
+    return outfit
+
+def delete_outfit(db: Session, outfit: Outfit) -> None:
+    db.query(OutfitItem).filter(OutfitItem.outfit_id == outfit.id).delete()
+    db.delete(outfit)
+    db.commit()
+
+def get_outfit_items(db: Session, outfit_id: uuid.UUID, user_id: uuid.UUID) -> list[ClothingItem]:
+    return (
+        db.query(ClothingItem)
+        .join(OutfitItem, OutfitItem.clothing_item_id == ClothingItem.id)
+        .filter(
+            OutfitItem.outfit_id == outfit_id,
+            ClothingItem.user_id == user_id,
+        )
         .all()
     )
 
@@ -162,6 +301,8 @@ def confirm_candidates_to_items(
     for selected in selected_items:
         candidate = get_candidate(db, uuid.UUID(selected.candidate_id))
         if not candidate:
+            continue
+        if candidate.draft_id != draft.id:
             continue
 
         attrs = candidate.ml_meta or {}

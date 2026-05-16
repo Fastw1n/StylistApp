@@ -62,7 +62,7 @@ class HomeActivity : AppCompatActivity(){
         }
 
         binding.cameraButton.setOnClickListener {
-            replaceFragment(CameraPageFragment())
+            replaceFragment(OutfitsPageFragment())
         }
 
     }

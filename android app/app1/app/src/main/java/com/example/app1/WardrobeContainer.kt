@@ -10,16 +10,21 @@ import java.util.UUID
 
 data class WardrobeItem(
     val id: String = UUID.randomUUID().toString(),
+    val name: String? = null,
     val category: String? = null,
     val imageUrl: String? = null,
     val imageUri: String? = null,
     val subcategory: String? = null,
     val season: String? = null,
     val warmthLevel: Int? = null,
-    val colors: List<ColorDto>? = emptyList()
+    val colors: List<ColorDto>? = emptyList(),
+    val isFavorite: Boolean = false
 ) {
     fun displayCategory(): String =
         category?.takeIf { it.isNotBlank() } ?: "Без категории"
+
+    fun displayName(): String =
+        name?.takeIf { it.isNotBlank() } ?: displayCategory()
 
     fun displayImageUrl(): String? =
         ApiUrl.resolveMediaUrl(imageUrl ?: imageUri)
@@ -61,6 +66,7 @@ object WardrobeContainer {
         addItem(
             context = context,
             item = WardrobeItem(
+                name = category,
                 category = category,
                 imageUrl = uri.toString(),
                 imageUri = uri.toString()
@@ -82,6 +88,37 @@ object WardrobeContainer {
 
     fun getItems(context: Context, category: String): List<WardrobeItem> =
         getAllItems(context).filter { it.category.equals(category, ignoreCase = true) }
+
+    fun getFavoriteItems(context: Context): List<WardrobeItem> =
+        getAllItems(context).filter { it.isFavorite }
+
+    fun updateFavorite(context: Context, itemId: String, isFavorite: Boolean, name: String?) {
+        migrateLegacyPrefsIfNeeded(context)
+        runBlocking(Dispatchers.IO) {
+            dao(context).updateFavorite(
+                id = itemId,
+                isFavorite = isFavorite,
+                name = name?.takeIf { it.isNotBlank() }
+            )
+        }
+    }
+
+    fun updateName(context: Context, itemId: String, name: String?) {
+        migrateLegacyPrefsIfNeeded(context)
+        runBlocking(Dispatchers.IO) {
+            dao(context).updateName(
+                id = itemId,
+                name = name?.takeIf { it.isNotBlank() }
+            )
+        }
+    }
+
+    fun deleteItem(context: Context, itemId: String) {
+        migrateLegacyPrefsIfNeeded(context)
+        runBlocking(Dispatchers.IO) {
+            dao(context).deleteById(itemId)
+        }
+    }
 
     fun clear(context: Context) {
         runBlocking(Dispatchers.IO) {
@@ -124,25 +161,29 @@ object WardrobeContainer {
         WardrobeItemEntity(
             id = id,
             sortOrder = sortOrder,
+            name = name,
             category = category,
             imageUrl = imageUrl,
             imageUri = imageUri,
             subcategory = subcategory,
             season = season,
             warmthLevel = warmthLevel,
-            colorsJson = colors?.let { gson.toJson(it) }
+            colorsJson = colors?.let { gson.toJson(it) },
+            isFavorite = isFavorite
         )
 
     private fun WardrobeItemEntity.toWardrobeItem(): WardrobeItem =
         WardrobeItem(
             id = id,
+            name = name,
             category = category,
             imageUrl = imageUrl,
             imageUri = imageUri,
             subcategory = subcategory,
             season = season,
             warmthLevel = warmthLevel,
-            colors = colorsJson?.let(::parseColors).orEmpty()
+            colors = colorsJson?.let(::parseColors).orEmpty(),
+            isFavorite = isFavorite
         )
 
     private fun parseColors(json: String): List<ColorDto> =
@@ -153,23 +194,27 @@ object WardrobeContainer {
     private fun ConfirmedItemDto.toWardrobeItem() =
         WardrobeItem(
             id = item_id,
+            name = name,
             category = attributes.category ?: "Без категории",
             imageUrl = ApiUrl.resolveMediaUrl(normalized_image_url),
             subcategory = attributes.subcategory,
             season = attributes.season,
             warmthLevel = attributes.warmth_level,
-            colors = attributes.colors
+            colors = attributes.colors,
+            isFavorite = is_favorite
         )
 
     private fun ClothingItemDto.toWardrobeItem(existingItem: WardrobeItem?) =
         WardrobeItem(
             id = item_id,
+            name = name ?: existingItem?.name,
             category = category,
             imageUrl = ApiUrl.resolveMediaUrl(normalized_image_url),
             imageUri = existingItem?.imageUri,
             subcategory = subcategory ?: existingItem?.subcategory,
             season = season ?: existingItem?.season,
             warmthLevel = warmth_level ?: existingItem?.warmthLevel,
-            colors = existingItem?.colors.orEmpty()
+            colors = existingItem?.colors.orEmpty(),
+            isFavorite = is_favorite
         )
 }

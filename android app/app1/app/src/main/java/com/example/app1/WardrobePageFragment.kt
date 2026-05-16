@@ -51,12 +51,22 @@ class WardrobePageFragment : Fragment() {
 
         val addButton = view.findViewById<ImageButton>(R.id.add_button_wardrobe)
         val allItemsCard = view.findViewById<View>(R.id.card_all_items)
+        val favoriteItemsCard = view.findViewById<View>(R.id.card_favorite_items)
+        val searchItemsCard = view.findViewById<View>(R.id.card_search_items)
 
         allItemsCard.setOnClickListener {
             openAllItems()
         }
 
-        updateAllItemsCount(view)
+        favoriteItemsCard.setOnClickListener {
+            openFavoriteItems()
+        }
+
+        searchItemsCard.setOnClickListener {
+            openSearchItems()
+        }
+
+        updateWardrobeCounts(view)
         syncWardrobeItems()
 
         addButton.setOnClickListener {
@@ -98,13 +108,39 @@ class WardrobePageFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        view?.let(::updateAllItemsCount)
+        view?.let(::updateWardrobeCounts)
     }
 
     private fun openAllItems() {
         parentFragmentManager.beginTransaction()
             .replace(R.id.framelayout, ClothingItemsFragment.newInstance())
             .addToBackStack("all_items")
+            .commit()
+    }
+
+    private fun openFavoriteItems() {
+        parentFragmentManager.beginTransaction()
+            .replace(
+                R.id.framelayout,
+                ClothingItemsFragment.newInstance(
+                    title = "Избранное",
+                    favoriteOnly = true
+                )
+            )
+            .addToBackStack("favorite_items")
+            .commit()
+    }
+
+    private fun openSearchItems() {
+        parentFragmentManager.beginTransaction()
+            .replace(
+                R.id.framelayout,
+                ClothingItemsFragment.newInstance(
+                    title = "Поиск вещи",
+                    searchMode = true
+                )
+            )
+            .addToBackStack("search_items")
             .commit()
     }
 
@@ -115,15 +151,17 @@ class WardrobePageFragment : Fragment() {
             .commit()
     }
 
-    private fun updateAllItemsCount(view: View) {
-        val count = WardrobeContainer.getAllItems(requireContext()).size
-        view.findViewById<TextView>(R.id.all_items_count).text = "Вещей: $count"
+    private fun updateWardrobeCounts(view: View) {
+        val allCount = WardrobeContainer.getAllItems(requireContext()).size
+        val favoriteCount = WardrobeContainer.getFavoriteItems(requireContext()).size
+        view.findViewById<TextView>(R.id.all_items_count).text = "Вещей: $allCount"
+        view.findViewById<TextView>(R.id.favorite_items_count).text = "Вещей: $favoriteCount"
     }
 
     private fun syncWardrobeItems() {
         lifecycleScope.launch {
             WardrobeSyncer.syncFromBackend(requireContext()).onSuccess {
-                view?.let(::updateAllItemsCount)
+                view?.let(::updateWardrobeCounts)
             }
         }
     }
@@ -303,7 +341,7 @@ class WardrobePageFragment : Fragment() {
 
     private fun loadWardrobeItems() {
         val savedItemsCount = WardrobeContainer.getAllItems(requireContext()).size
-        view?.let(::updateAllItemsCount)
+        view?.let(::updateWardrobeCounts)
         Toast.makeText(
             requireContext(),
             "Всего вещей в гардеробе: $savedItemsCount",
@@ -332,7 +370,7 @@ class WardrobePageFragment : Fragment() {
                 val response = RetrofitClient.api.confirmItem(request)
                 WardrobeContainer.addConfirmedItems(requireContext(), response.items)
                 WardrobeSyncer.syncFromBackend(requireContext())
-                updateAllItemsCount(requireView())
+                updateWardrobeCounts(requireView())
 
                 Toast.makeText(
                     requireContext(),

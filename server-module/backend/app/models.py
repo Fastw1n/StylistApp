@@ -11,12 +11,15 @@ from sqlalchemy import (
     Boolean,
     Index,
     Float,
+    JSON,
 )
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
 
 from .db import Base
+
+PortableJSON = JSON().with_variant(JSONB, "postgresql")
 
 
 class Gender(str, enum.Enum):
@@ -129,7 +132,7 @@ class ClothingItemDraft(Base):
     original_image_key: Mapped[str] = mapped_column(Text, nullable=False)
     normalized_image_key: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    attributes: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    attributes: Mapped[dict | None] = mapped_column(PortableJSON, nullable=True)
     error_text: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
@@ -159,6 +162,7 @@ class ClothingItem(Base):
     user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
 
     name: Mapped[str | None] = mapped_column(String, nullable=True)
+    is_favorite: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     category: Mapped[ClothingCategory] = mapped_column(Enum(ClothingCategory), nullable=False)
     subcategory: Mapped[str | None] = mapped_column(String, nullable=True)
 
@@ -171,8 +175,8 @@ class ClothingItem(Base):
     brand: Mapped[str | None] = mapped_column(String, nullable=True)
 
     normalized_image_key: Mapped[str] = mapped_column(Text, nullable=False)
-    colors: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
-    ml_meta: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    colors: Mapped[dict | None] = mapped_column(PortableJSON, nullable=True)
+    ml_meta: Mapped[dict | None] = mapped_column(PortableJSON, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -211,7 +215,7 @@ class Outfit(Base):
 
     season: Mapped[Season | None] = mapped_column(Enum(Season), nullable=True)
     style: Mapped[str | None] = mapped_column(String, nullable=True)
-    context: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    context: Mapped[dict | None] = mapped_column(PortableJSON, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -265,9 +269,9 @@ class ClothingItemDraftCandidate(Base):
     warmth_level: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     normalized_image_key: Mapped[str] = mapped_column(Text, nullable=False)
-    colors: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    colors: Mapped[dict | None] = mapped_column(PortableJSON, nullable=True)
     confidence: Mapped[float | None] = mapped_column(Float, nullable=True)
-    ml_meta: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    ml_meta: Mapped[dict | None] = mapped_column(PortableJSON, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

@@ -3,13 +3,15 @@ package com.example.app1
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
 
 class WardrobeItemsAdapter(
-    private val onItemClick: (WardrobeItem) -> Unit = {}
+    private val onItemClick: (WardrobeItem) -> Unit = {},
+    private val onMenuClick: (WardrobeItem, View) -> Unit = { _, _ -> }
 ) : RecyclerView.Adapter<WardrobeItemsAdapter.WardrobeItemViewHolder>() {
 
     private val items = mutableListOf<WardrobeItem>()
@@ -32,6 +34,9 @@ class WardrobeItemsAdapter(
         holder.itemView.setOnClickListener {
             onItemClick(item)
         }
+        holder.menuButton.setOnClickListener {
+            onMenuClick(item, holder.menuButton)
+        }
     }
 
     override fun getItemCount(): Int = items.size
@@ -40,6 +45,7 @@ class WardrobeItemsAdapter(
         private val imageView: ImageView = itemView.findViewById(R.id.itemImage)
         private val categoryText: TextView = itemView.findViewById(R.id.categoryText)
         private val detailsText: TextView = itemView.findViewById(R.id.detailsText)
+        val menuButton: ImageButton = itemView.findViewById(R.id.itemMenuButton)
 
         fun bind(item: WardrobeItem) {
             imageView.load(item.displayImageUrl()) {
@@ -48,8 +54,13 @@ class WardrobeItemsAdapter(
                 error(R.drawable.ic_wardrobe)
             }
 
-            categoryText.text = item.displayCategory()
+            categoryText.text = if (item.isFavorite) {
+                "★ ${item.displayName()}"
+            } else {
+                item.displayName()
+            }
             detailsText.text = item.detailsText()
+            menuButton.contentDescription = "Действия с вещью"
         }
 
         private fun WardrobeItem.detailsText(): String {

@@ -7,6 +7,7 @@ import retrofit2.http.GET
 import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.Part
+import retrofit2.http.Path
 import retrofit2.http.PUT
 
 interface ApiService {
@@ -45,4 +46,29 @@ interface ApiService {
 
     @GET("/v1/items")
     suspend fun getItems(): ItemsResponse
+
+    @PUT("/v1/items/{item_id}/favorite")
+    suspend fun updateItemFavorite(
+        @Path("item_id") itemId: String,
+        @Body request: FavoriteItemRequest
+    ): ClothingItemDto
+
+    @PUT("/v1/items/{item_id}")
+    suspend fun updateItem(
+        @Path("item_id") itemId: String,
+        @Body request: UpdateItemRequest
+    ): ClothingItemDto
+
+    @DELETE("/v1/items/{item_id}")
+    suspend fun deleteItem(
+        @Path("item_id") itemId: String
+    ): DeleteItemResponse
+
+    @GET("/v1/outfits")
+    suspend fun getOutfits(): OutfitsResponse
+
+    @POST("/v1/outfits")
+    suspend fun createOutfit(
+        @Body request: CreateOutfitRequest
+    ): OutfitDto
 }

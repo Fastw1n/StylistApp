@@ -46,6 +46,33 @@
         app:layout_constraintStart_toStartOf="@id/clothingItemsTitle"
         app:layout_constraintTop_toBottomOf="@id/clothingItemsTitle" />
 
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/clothingSearchInputLayout"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:hint="Название вещи"
+        android:visibility="gone"
+        app:boxCornerRadiusBottomEnd="8dp"
+        app:boxCornerRadiusBottomStart="8dp"
+        app:boxCornerRadiusTopEnd="8dp"
+        app:boxCornerRadiusTopStart="8dp"
+        app:boxStrokeColor="@color/gray"
+        app:endIconMode="clear_text"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@id/clothingItemsTitle"
+        app:layout_constraintTop_toBottomOf="@id/clothingItemsCount">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/clothingSearchEditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:imeOptions="actionSearch"
+            android:inputType="textCapSentences"
+            android:maxLines="1"
+            android:singleLine="true" />
+    </com.google.android.material.textfield.TextInputLayout>
+
     <TextView
         android:id="@+id/clothingItemsEmpty"
         android:layout_width="0dp"
@@ -57,7 +84,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/clothingItemsCount" />
+        app:layout_constraintTop_toBottomOf="@id/clothingSearchInputLayout" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/clothingItemsRecycler"
@@ -69,6 +96,6 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/clothingItemsCount" />
+        app:layout_constraintTop_toBottomOf="@id/clothingSearchInputLayout" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -14,7 +14,13 @@ HASH_ITERATIONS = 120_000
 
 def normalize_email(email: str) -> str:
     value = email.strip().lower()
-    if "@" not in value or "." not in value.rsplit("@", 1)[-1]:
+    local_part, separator, domain = value.partition("@")
+    if (
+        not separator
+        or not local_part
+        or not domain
+        or "." not in domain
+    ):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid email",
