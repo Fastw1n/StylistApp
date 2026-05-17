@@ -8,6 +8,8 @@ htmlcov/
 # Backend runtime media
 server-module/uploads/
 server-module/backend/htmlcov/
+server-module/certs/*
+!server-module/certs/.gitkeep
 
 # Large local ML artifacts
 image-processing-module/models/
