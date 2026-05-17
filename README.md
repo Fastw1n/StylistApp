@@ -81,9 +81,17 @@ docker compose up --build
 - `stylist_seaweed_master` - SeaweedFS master;
 - `stylist_seaweed_volume` - SeaweedFS volume server;
 - `stylist_seaweed_filer` - SeaweedFS filer;
-- `stylist_image_processing` - FastAPI ML service на порту `8001`;
+- `stylist_image_processing` - FastAPI ML service на внутреннем порту `8001`;
 - `stylist_api` - FastAPI backend;
 - `stylist_nginx` - reverse proxy на порту `8000`.
+
+Наружу из Docker Compose опубликован только один порт:
+
+```text
+localhost:8000 -> nginx
+```
+
+PostgreSQL, SeaweedFS, backend API и image-processing service доступны только внутри Docker-сети по именам сервисов `db`, `seaweed-filer`, `api` и `image-processing`.
 
 После запуска backend доступен по адресу:
 
@@ -178,7 +186,7 @@ http://10.0.2.2:8000/
 
 ## Ручной запуск image-processing-module
 
-Если backend запускается через Docker Compose, отдельный ручной запуск image-processing-module не нужен: compose сам поднимает сервис `image-processing` на порту `8001`.
+Если backend запускается через Docker Compose, отдельный ручной запуск image-processing-module не нужен: compose сам поднимает сервис `image-processing` на внутреннем порту `8001`.
 
 Для локальной разработки ML-сервис можно запускать отдельно. На Windows текущий рабочий вариант:
 
