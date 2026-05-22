@@ -2,6 +2,7 @@ services:
   db:
     image: postgres:16
     container_name: stylist_db
+    restart: unless-stopped
     environment:
       POSTGRES_DB: stylist
       POSTGRES_USER: stylist
@@ -14,6 +15,7 @@ services:
   seaweed-master:
     image: chrislusf/seaweedfs:latest
     container_name: stylist_seaweed_master
+    restart: unless-stopped
     command: 'master -ip=seaweed-master -ip.bind=0.0.0.0 -mdir=/data -port=9333'
     expose:
       - "9333"
@@ -23,6 +25,7 @@ services:
   seaweed-volume:
     image: chrislusf/seaweedfs:latest
     container_name: stylist_seaweed_volume
+    restart: unless-stopped
     command: 'volume -ip=seaweed-volume -ip.bind=0.0.0.0 -dir=/data -port=8080 -mserver=seaweed-master:9333'
     depends_on:
       - seaweed-master
@@ -32,6 +35,7 @@ services:
   seaweed-filer:
     image: chrislusf/seaweedfs:latest
     container_name: stylist_seaweed_filer
+    restart: unless-stopped
     command: 'filer -ip=seaweed-filer -ip.bind=0.0.0.0 -master=seaweed-master:9333'
     expose:
       - "8888"
@@ -51,6 +55,7 @@ services:
     build:
       context: ../image-processing-module
     container_name: stylist_image_processing
+    restart: unless-stopped
     environment:
       YOLO_WEIGHTS_PATH: /app/models/best.pt
     expose:
@@ -62,6 +67,7 @@ services:
     build:
       context: ./backend
     container_name: stylist_api
+    restart: unless-stopped
     environment:
       DATABASE_URL: postgresql+psycopg2://stylist:stylist@db:5432/stylist
       MEDIA_ROOT: /data/uploads
@@ -89,6 +95,7 @@ services:
   nginx:
     image: nginx:1.27-alpine
     container_name: stylist_nginx
+    restart: unless-stopped
     ports:
       - "9403:443"
     volumes:

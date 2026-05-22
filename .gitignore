@@ -4,6 +4,7 @@ __pycache__/
 .pytest_cache/
 .coverage
 htmlcov/
+server-module/backend/.venv/
 
 # Backend runtime media
 server-module/uploads/
