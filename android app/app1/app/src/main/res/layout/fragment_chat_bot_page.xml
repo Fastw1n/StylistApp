@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/beige"
     tools:context=".ChatBotPageFragment">
 
     <LinearLayout
@@ -27,7 +28,7 @@
                 android:layout_height="wrap_content"
                 android:gravity="start"
                 android:textSize="20dp"
-                android:textColor="#00FFFF"
+                android:textColor="@color/black"
                 android:text="Привет, я чатбот! Чем я могу тебе помочь?">
 
             </TextView>
@@ -44,7 +45,7 @@
                 android:layout_height="wrap_content"
                 android:gravity="end"
                 android:textSize="20dp"
-                android:textColor="#00FF00"
+                android:textColor="@color/black"
                 android:text="Как мне добавить свою вещь в гардероб?">
 
             </TextView>
@@ -60,7 +61,7 @@
                 android:layout_height="wrap_content"
                 android:gravity="start"
                 android:textSize="20dp"
-                android:textColor="#00FFFF"
+                android:textColor="@color/black"
                 android:text="Перейди в раздел камеры и нажми добавить">
 
             </TextView>
@@ -76,7 +77,7 @@
                 android:layout_height="wrap_content"
                 android:gravity="end"
                 android:textSize="20dp"
-                android:textColor="#00FF00"
+                android:textColor="@color/black"
                 android:text="Спасибо за помощь!">
 
             </TextView>
@@ -92,7 +93,7 @@
                 android:layout_height="wrap_content"
                 android:gravity="start"
                 android:textSize="20dp"
-                android:textColor="#00FFFF"
+                android:textColor="@color/black"
                 android:text="Рад был помочь!">
 
             </TextView>
@@ -115,6 +116,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:gravity="center"
+            android:textColor="@color/black"
             android:text="Добавить сообщение"
             android:textSize="30dp"
             android:layout_marginBottom="55dp">

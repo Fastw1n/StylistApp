@@ -71,4 +71,15 @@ interface ApiService {
     suspend fun createOutfit(
         @Body request: CreateOutfitRequest
     ): OutfitDto
+
+    @PUT("/v1/outfits/{outfit_id}")
+    suspend fun updateOutfit(
+        @Path("outfit_id") outfitId: String,
+        @Body request: UpdateOutfitRequest
+    ): OutfitDto
+
+    @DELETE("/v1/outfits/{outfit_id}")
+    suspend fun deleteOutfit(
+        @Path("outfit_id") outfitId: String
+    ): DeleteOutfitResponse
 }

@@ -1,7 +1,6 @@
 package com.example.app1
 
 import android.app.Dialog
-import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.ViewGroup
@@ -18,7 +17,7 @@ class WardrobeImagePreviewDialog : DialogFragment() {
         val imageUrl = requireArguments().getString(ARG_IMAGE_URL)
 
         val root = FrameLayout(requireContext()).apply {
-            setBackgroundColor(Color.WHITE)
+            setBackgroundColor(resources.getColor(R.color.white, null))
         }
 
         val imageView = ImageView(requireContext()).apply {
@@ -64,7 +63,7 @@ class WardrobeImagePreviewDialog : DialogFragment() {
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
-            window.setBackgroundDrawable(ColorDrawable(Color.WHITE))
+            window.setBackgroundDrawable(ColorDrawable(resources.getColor(R.color.white, null)))
         }
     }
 

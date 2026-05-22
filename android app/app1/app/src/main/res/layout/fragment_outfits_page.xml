@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white"
+    android:background="@color/beige"
     android:clipToPadding="false"
     android:padding="20dp">
 
@@ -17,7 +17,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Образы"
-            android:textColor="@color/black"
+            android:textColor="@color/forMainText"
             android:textSize="30sp"
             android:textStyle="bold" />
 
@@ -26,7 +26,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="6dp"
             android:text="Собирайте комплекты из вещей гардероба"
-            android:textColor="@color/gray"
+            android:textColor="@color/bestvar"
             android:textSize="16sp" />
 
         <com.google.android.material.card.MaterialCardView
@@ -49,7 +49,8 @@
                 android:paddingStart="18dp"
                 android:paddingEnd="18dp"
                 android:text="Создать образ"
-                android:textColor="@color/black"
+                android:textColor="@color/forMainText"
+
                 android:textSize="24sp"
                 android:textStyle="bold" />
         </com.google.android.material.card.MaterialCardView>
@@ -73,7 +74,7 @@
                 android:paddingStart="18dp"
                 android:paddingEnd="18dp"
                 android:text="Рекомендованные образы"
-                android:textColor="@color/black"
+                android:textColor="@color/forMainText"
                 android:textSize="24sp"
                 android:textStyle="bold" />
         </com.google.android.material.card.MaterialCardView>
@@ -97,7 +98,7 @@
                 android:paddingStart="18dp"
                 android:paddingEnd="18dp"
                 android:text="Ваши образы"
-                android:textColor="@color/black"
+                android:textColor="@color/forMainText"
                 android:textSize="24sp"
                 android:textStyle="bold" />
         </com.google.android.material.card.MaterialCardView>
@@ -121,7 +122,7 @@
                 android:paddingStart="18dp"
                 android:paddingEnd="18dp"
                 android:text="Добавить вещь"
-                android:textColor="@color/black"
+                android:textColor="@color/forMainText"
                 android:textSize="24sp"
                 android:textStyle="bold" />
         </com.google.android.material.card.MaterialCardView>

@@ -32,12 +32,12 @@ class HomeActivity : AppCompatActivity(){
             finish()
             return
         }
+        WeatherPreferences.clearLegacy(this)
 
         binding = ActivityMainPageBinding.inflate(layoutInflater)
         setContentView(binding.root)
         syncWardrobeOnStartup()
 
-        // стартовый фрагмент
         replaceFragment(HomePageFragment())
 
         binding.homeButton.setOnClickListener {

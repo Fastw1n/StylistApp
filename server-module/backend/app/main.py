@@ -282,7 +282,6 @@ async def prepare_item(
 
     image_bytes = await image.read()
 
-    # сохраняем original
     original_key = storage.save_bytes("original", image.filename or f"upload.{ext}", image_bytes)
 
     draft = create_draft(
@@ -321,7 +320,6 @@ async def prepare_item(
             except Exception:
                 season = None
 
-        # сохраняем candidate image из base64
         image_b64 = detected["image_base64"]
         candidate_bytes = base64.b64decode(image_b64)
         normalized_key = storage.save_bytes("normalized", detected["filename"], candidate_bytes)

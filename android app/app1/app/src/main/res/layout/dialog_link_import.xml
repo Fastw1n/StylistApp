@@ -20,7 +20,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="14dp"
         android:hint="Ссылка или артикул"
-        app:boxBackgroundColor="#F2F2F2"
+        app:boxBackgroundColor="@color/beige"
         app:boxBackgroundMode="filled"
         app:boxCornerRadiusBottomEnd="8dp"
         app:boxCornerRadiusBottomStart="8dp"

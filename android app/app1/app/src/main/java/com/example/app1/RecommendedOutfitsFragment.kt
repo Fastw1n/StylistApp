@@ -18,7 +18,7 @@ class RecommendedOutfitsFragment : Fragment() {
     ): View {
         return LinearLayout(requireContext()).apply {
             orientation = LinearLayout.VERTICAL
-            setBackgroundColor(android.graphics.Color.WHITE)
+            setBackgroundColor(resources.getColor(R.color.beige, null))
             setPadding(20.dp, 20.dp, 20.dp, 24.dp)
 
             addView(ImageButton(requireContext()).apply {
@@ -36,7 +36,7 @@ class RecommendedOutfitsFragment : Fragment() {
                     ViewGroup.LayoutParams.WRAP_CONTENT
                 ).apply { topMargin = 12.dp }
                 text = "Рекомендованные образы"
-                setTextColor(android.graphics.Color.BLACK)
+                setTextColor(resources.getColor(R.color.black, null))
                 textSize = 30f
                 setTypeface(typeface, android.graphics.Typeface.BOLD)
             })

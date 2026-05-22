@@ -136,12 +136,26 @@ data class OutfitItemDto(
 data class OutfitDto(
     val outfit_id: String,
     val name: String? = null,
-    val items: List<OutfitItemDto>
+    val items: List<OutfitItemDto>,
+    val style: String? = null,
+    val colors: List<String> = emptyList(),
+    val season: String? = null
 )
 
 data class CreateOutfitRequest(
     val name: String? = null,
-    val item_ids: List<String>
+    val item_ids: List<String>,
+    val style: String? = null,
+    val colors: List<String> = emptyList(),
+    val season: String? = null
+)
+
+data class UpdateOutfitRequest(
+    val name: String? = null
+)
+
+data class DeleteOutfitResponse(
+    val ok: Boolean
 )
 
 data class OutfitsResponse(

@@ -4,7 +4,7 @@
     android:id="@+id/hello"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white"
+    android:background="@color/beige"
     android:fillViewport="true">
 
     <LinearLayout
@@ -21,7 +21,7 @@
             android:layout_width="92dp"
             android:layout_height="92dp"
             android:background="@drawable/wardrobe_maiki_background"
-            android:contentDescription="Helpic"
+            android:contentDescription="Styлистика"
             android:padding="18dp"
             android:src="@drawable/ic_wardrobe" />
 
@@ -30,7 +30,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="22dp"
             android:gravity="center"
-            android:text="Helpic"
+            android:text="Styлистика"
             android:textColor="@color/black"
             android:textSize="34sp"
             android:textStyle="bold" />
@@ -60,7 +60,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="22dp"
             android:hint="Имя"
-            app:boxBackgroundColor="#F2F2F2"
+            app:boxBackgroundColor="@color/beige"
             app:boxBackgroundMode="filled"
             app:boxCornerRadiusBottomEnd="8dp"
             app:boxCornerRadiusBottomStart="8dp"
@@ -82,7 +82,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
             android:hint="Почта"
-            app:boxBackgroundColor="#F2F2F2"
+            app:boxBackgroundColor="@color/beige"
             app:boxBackgroundMode="filled"
             app:boxCornerRadiusBottomEnd="8dp"
             app:boxCornerRadiusBottomStart="8dp"
@@ -104,7 +104,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
             android:hint="Пароль"
-            app:boxBackgroundColor="#F2F2F2"
+            app:boxBackgroundColor="@color/beige"
             app:boxBackgroundMode="filled"
             app:boxCornerRadiusBottomEnd="8dp"
             app:boxCornerRadiusBottomStart="8dp"
@@ -125,7 +125,7 @@
             android:layout_width="match_parent"
             android:layout_height="56dp"
             android:layout_marginTop="22dp"
-            android:backgroundTint="@color/black"
+            android:backgroundTint="@color/pastel_orange"
             android:text="Войти"
             android:textAllCaps="false"
             android:textColor="@color/white"

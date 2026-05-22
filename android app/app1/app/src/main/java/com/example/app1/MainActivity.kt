@@ -91,6 +91,7 @@ class MainActivity : AppCompatActivity() {
             }.onSuccess { response ->
                 WardrobeContainer.clear(this@MainActivity)
                 AuthStorage.save(this@MainActivity, response)
+                WeatherPreferences.clearLegacy(this@MainActivity)
                 WardrobeSyncer.syncFromBackend(this@MainActivity)
                 openHome()
             }.onFailure { error ->

@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white"
+    android:background="@color/beige"
     android:orientation="vertical">
 
     <FrameLayout
@@ -29,6 +29,7 @@
         android:layout_marginStart="0dp"
         android:layout_marginEnd="0dp"
         android:layout_marginBottom="0dp"
+        android:background="@drawable/bg_menu_bar"
         android:paddingStart="20dp"
         android:paddingEnd="20dp"
         android:paddingBottom="10dp"

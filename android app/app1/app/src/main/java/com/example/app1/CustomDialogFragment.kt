@@ -23,7 +23,6 @@ class CustomDialogFragment : DialogFragment() {
         dialog.setContentView(R.layout.dialog_custom)
         dialog.setCanceledOnTouchOutside(true)
 
-        // Важно: клики вешаем здесь, т.к. это Dialog с contentView
         dialog.findViewById<ViewGroup>(R.id.btnPickPhotoByGallery)?.setOnClickListener {
             dismissAllowingStateLoss()
             actions?.onPickFromGallery()

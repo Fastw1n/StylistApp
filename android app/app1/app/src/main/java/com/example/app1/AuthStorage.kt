@@ -37,6 +37,9 @@ object AuthStorage {
     fun getEmail(context: Context): String? =
         prefs(context).getString(KEY_EMAIL, null)
 
+    fun getUserId(context: Context): String? =
+        prefs(context).getString(KEY_USER_ID, null)
+
     fun getName(context: Context): String? =
         prefs(context).getString(KEY_NAME, null)
 

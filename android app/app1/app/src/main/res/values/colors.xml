@@ -1,11 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="gray">#808080</color>
-    <color name="light_gray">#9e9fad</color>
-    <color name="light_brown">#79553D</color>
-    <color name="antik">#FAEBD7</color>
-    <color name="allum">#A5A5A5</color>
-    <color name="granat">#F34723</color>
+    <color name="beige">#FFF6EE</color>
+    <color name="pastel_orange">#D48668</color>
+    <color name="pastel_orange_overlay">#99D48668</color>
+    <color name="pastel_orange_scrim">#55D48668</color>
+    <color name="white_overlay">#EFFFFFFF</color>
+    <color name="white_scrim">#33FFFFFF</color>
+    <color name="settings_icon">#FF000000</color>
+    <color name="candidate_reject">#C83434</color>
+    <color name="candidate_accept">#2E9B57</color>
+
+    <color name="black">#FF000000</color>
+    <color name="gray">#FF000000</color>
+    <color name="light_gray">#FFF6EE</color>
+    <color name="light_brown">#D48668</color>
+    <color name="antik">#FFF6EE</color>
+    <color name="allum">#FFF6EE</color>
+    <color name="granat">#D48668</color>
+    <color name="bestvar">#9D2403</color>
+    <color name="forMainText">#571900</color>
+
 </resources>

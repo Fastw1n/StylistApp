@@ -10,55 +10,56 @@
     app:cardCornerRadius="8dp"
     app:cardElevation="2dp">
 
-    <FrameLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#F4F4F4">
+        android:background="@color/beige"
+        android:orientation="vertical">
 
-        <ImageView
-            android:id="@+id/itemImage"
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:contentDescription="Фото вещи"
-            android:padding="8dp"
-            android:scaleType="fitCenter" />
+            android:layout_height="0dp"
+            android:layout_weight="1">
 
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_gravity="bottom"
-            android:background="#66000000" />
+            <ImageView
+                android:id="@+id/itemImage"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="Фото вещи"
+                android:padding="8dp"
+                android:scaleType="fitCenter" />
+
+            <ImageButton
+                android:id="@+id/itemMenuButton"
+                android:layout_width="42dp"
+                android:layout_height="42dp"
+                android:layout_gravity="top|end"
+                android:layout_margin="8dp"
+                android:background="@drawable/bg_favorite_button"
+                android:contentDescription="Действия с вещью"
+                android:padding="9dp"
+                android:src="@drawable/ic_more_vert" />
+        </FrameLayout>
 
         <TextView
             android:id="@+id/categoryText"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
+            android:layout_height="52dp"
+            android:background="@color/white"
             android:ellipsize="end"
+            android:gravity="center_vertical"
             android:maxLines="2"
             android:paddingStart="10dp"
             android:paddingEnd="10dp"
-            android:paddingBottom="8dp"
             android:text="Категория"
-            android:textColor="@color/white"
+            android:textColor="@color/black"
             android:textSize="15sp"
             android:textStyle="bold" />
-
-        <ImageButton
-            android:id="@+id/itemMenuButton"
-            android:layout_width="42dp"
-            android:layout_height="42dp"
-            android:layout_gravity="top|end"
-            android:layout_margin="8dp"
-            android:background="@drawable/bg_favorite_button"
-            android:contentDescription="Действия с вещью"
-            android:padding="9dp"
-            android:src="@drawable/ic_more_vert" />
 
         <TextView
             android:id="@+id/detailsText"
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:visibility="gone" />
-    </FrameLayout>
+    </LinearLayout>
 </com.google.android.material.card.MaterialCardView>
